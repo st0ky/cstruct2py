@@ -4,9 +4,6 @@ from collections import OrderedDict
 
 class MetaPyStruct(type):
     def __init__(cls, name, bases, d):
-        # assert "BasePyStruct" in bases
-        assert "_fields" in d and isinstance(d["_fields"], OrderedDict)
-
         super(MetaPyStruct, cls).__init__(name, (BasePyStruct,) + bases, d)
 
         cls.size = sum(map(len, cls._fields.values()))
@@ -14,6 +11,8 @@ class MetaPyStruct(type):
         cls.__methods__ = []
 
     def __new__(cls, name, bases, d):
+        assert "_fields" in d and isinstance(d["_fields"], list)
+        d["_fields"] = OrderedDict(d["_fields"])
         return type.__new__(cls, name, (BasePyStruct,) + bases, d)
 
     def pack(cls, buf, index, inst):
@@ -97,11 +96,11 @@ class BasePyStruct(object):
 
 class A(object):
     __metaclass__ = MetaPyStruct
-    _fields = OrderedDict([("x", py_uint64_t), ("y", py_uint64_t)])
+    _fields = [("x", py_uint64_t), ("y", py_uint64_t)]
 
 class B(object):
     __metaclass__ = MetaPyStruct
-    _fields = OrderedDict([("a", A), ("b", A)])
+    _fields = [("a", A), ("b", A)]
 
         
 sizeof = len
