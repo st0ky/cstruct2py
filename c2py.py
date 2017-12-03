@@ -32,28 +32,20 @@ names_to_pycstructs[('unsigned', 'byte', )] = py_int8_t
 sizeof = len
 
 
-typedef_tamplate = """
+global_assignment = """
 global %(name)s
 %(name)s = %(var)s
 """
 
 structs_num = 0
 arrays_num = 0
-struct_tamplate = """
-global %(name)s
-%(name)s = MetaPyStruct('%(name)s', (), {"_fields" : %(fields)s})
-
-global names_to_pycstructs
-names_to_pycstructs['%(name)s'] = %(name)s
-val = %(name)s
-"""
 
 def typedef_handler(node):
     assert type(node) is pycparser.c_ast.Typedef
     name = node.name
     val = parse_node(node.type)
     names_to_pycstructs[name] = val
-    exec(typedef_tamplate % {"name" : name, "var" : "val"})
+    exec(global_assignment % {"name" : name, "var" : "val"})
 
 def _field_handler(node):
     assert type(node) == pycparser.c_ast.Decl
@@ -77,7 +69,10 @@ def struct_handler(node):
     if name == None:
         name = "struct_num_%d" % structs_num
 
-    exec(struct_tamplate % {"name" : name, "fields" : "fields"})
+    val = MetaPyStruct(name, (), {"_fields" : fields})
+    global names_to_pycstructs
+    names_to_pycstructs[name] = val
+    exec(global_assignment % {"name" : name, "var" : "val"})
     return val
 
 def union_handler(node):
