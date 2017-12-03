@@ -2,12 +2,17 @@
 
 class BasePyUnion(BasePyStruct):
     def __init__(self, buf=None, index=0):
-        super(BasePyArray, self).__init__(buf, index)
+        super(BasePyUnion, self).__init__(buf, index)
         self._cache = bytearray("\x00" * len(self))
         if self._buf:
             self._cache[0:len(self)] = self._buf[self._index:self._index + len(self)]
-        self._last = object()
+        self._last = type("\x01", (object,), {})()
         self._last.name = None
+
+    def _flush_to_cache(self):
+        if self._last.name:
+            self._fields[name].pack(self._cache, 0, self._last.value)
+            self._last.name = None
 
     def __getattr__(self, name):
         print "[%d] __getattr__ %s" % (id(self), name)
@@ -17,7 +22,7 @@ class BasePyUnion(BasePyStruct):
         if self._last.name == name:
             return self._last.value
 
-        self._fields[name].pack(self._cache, 0, self._last.value)
+        self._flush_to_cache()
 
         self._last.name = name
         self._last.value = self._fields[name](self._cache)
@@ -26,7 +31,7 @@ class BasePyUnion(BasePyStruct):
 
     def __setattr__(self, name, val):
         print "[%d] __getattr__ %s" % (id(self), name)
-        if name in ["_cache", "_last"]:
+        if name in ["_cache", "_last", "_buf", "_index"]:
             self.__dict__[name] = val
             return
 
@@ -37,45 +42,31 @@ class BasePyUnion(BasePyStruct):
             self._last.value = self._fields[name].copy(val)
             return
 
-        self._fields[name].pack(self._cache, 0, self._last.value)
+        self._flush_to_cache()
 
         self._last.name = name
         self._last.value = self._fields[name].copy(val)
 
         return self._last.value
-    
-    def __getitem__(self, key):
-        assert type(key) in [int, long] and 0 <= key and (self._count == None or key < self._count)
-
-        if key in self._cached:
-            return self._cached[key]
-        else:
-            self._cached[key] = self._type(self._buf, self._index + len(self._type) * key)
-            return self._cached[key]
-
-    def __setitem__(self, key, val):
-        assert type(key) in [int, long] and 0 <= key and (self._count == None or key < self._count)
-
-        self._cached[key] = self._type.copy(val)
 
 class MetaPyUnion(type):
     def __init__(cls, name, bases, d):
-        assert "_type" in d and "_count" in d and (d["_count"] is None or (type(d["_count"]) in [int, long] and d["_count"] >= 0))
+        super(MetaPyUnion, cls).__init__(name, (BasePyUnion,) + bases, d)
 
-
-        super(MetaPyArray, cls).__init__(name, (BasePyArray,) + bases, d)
-
-        if cls._count:
-            cls.size = len(cls._type) * cls._count
-        else:
-            cls.size = 0
+        cls.size = max(v.size for v in cls._fields.values())
+        cls.__members__ = cls._fields.keys()
+        cls.__methods__ = []
 
     def __new__(cls, name, bases, d):
-        return type.__new__(cls, name, (BasePyArray,) + bases, d)
+        print type(d["_fields"]), d["_fields"]
+        assert "_fields" in d and type(d["_fields"]) in [dict, list]
+        if type(d["_fields"]) is list:
+            d["_fields"] = dict(d["_fields"])
+        return type.__new__(cls, name, (BasePyUnion,) + bases, d)
 
     def pack(cls, buf, index, inst):
-        for ind, val in inst._cached.items():
-            cls._type.pack(buf, index + ind * len(cls._type), val)
+        inst._flush_to_cache()
+        buf[index:index + cls.size] = inst._cache
         return buf
 
     def unpack(cls, buf, index):
@@ -87,8 +78,8 @@ class MetaPyUnion(type):
     def copy(cls, val):
         if type(val) is cls:
             ret = cls(val._buf, val._index)
-            for i, v in cls._cached.items():
-                ret[i] = v
+            val._flush_to_cache()
+            ret._cache = val._cache[:]
             return ret
         
         if type(val) in [str, bytearray] and len(val) >= cls.size:
@@ -96,20 +87,8 @@ class MetaPyUnion(type):
         
         raise ValueError
 
+class A(object):
+    __metaclass__ = MetaPyStruct
+    _fields = [("x", py_uint32_t), ("y", py_uint32_t)]
 
-class iArr(object):
-    __metaclass__ = MetaPyArray
-    _type = py_uint64_t
-    _count = 5
-
-class iArrA(object):
-    __metaclass__ = MetaPyArray
-    _type = iArr
-    _count = 5
-
-
-
-class bArr(object):
-    __metaclass__ = MetaPyArray
-    _type = B
-    _count = 5
+B = MetaPyUnion("B", (), {"_fields" : {"a" : py_uint32_t, "b" : py_uint64_t, "c" : A}})
