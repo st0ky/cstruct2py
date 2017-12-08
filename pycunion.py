@@ -11,7 +11,7 @@ class BasePyUnion(BasePyStruct):
 
     def _flush_to_cache(self):
         if self._last.name:
-            self._fields[name].pack(self._cache, 0, self._last.value)
+            self._fields[self._last.name].pack(self._cache, 0, self._last.value)
             self._last.name = None
 
     def __getattr__(self, name):

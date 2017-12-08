@@ -38,6 +38,7 @@ global %(name)s
 """
 
 structs_num = 0
+unions_num = 0
 arrays_num = 0
 
 def typedef_handler(node):
@@ -76,7 +77,26 @@ def struct_handler(node):
     return val
 
 def union_handler(node):
-    pass
+    assert type(node) == pycparser.c_ast.Union
+    name = node.name
+    if not node.decls:
+        return names_to_pycstructs[name]
+
+    fields = []
+    for decl in node.decls:
+        field_name, field_type = _field_handler(decl)
+        fields.append((field_name, field_type))
+
+    global unions_num
+    unions_num += 1
+    if name == None:
+        name = "struct_num_%d" % unions_num
+
+    val = MetaPyUnion(name, (), {"_fields" : fields})
+    global names_to_pycstructs
+    names_to_pycstructs[name] = val
+    exec(global_assignment % {"name" : name, "var" : "val"})
+    return val
 
 def array_handler(node):
     assert type(node) is pycparser.c_ast.ArrayDecl
@@ -116,6 +136,9 @@ def parse_node(node):
 
     if type(node) is pycparser.c_ast.Struct:
         return struct_handler(node)
+
+    if type(node) is pycparser.c_ast.Union:
+        return union_handler(node)
 
     if type(node) is pycparser.c_ast.ArrayDecl:
         return array_handler(node)
