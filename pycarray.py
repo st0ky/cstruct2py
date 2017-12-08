@@ -14,7 +14,15 @@ class BasePyArray(BasePyStruct):
         self.__dict__[name] = val
     
     def __getitem__(self, key):
-        assert type(key) in [int, long] and 0 <= key and (self._count == None or key < self._count)
+        if type(key) == slice:
+            start, stop, step = key.start, key.stop, key.step
+            if step is None:
+                step = 1
+            return [self[i] for i in xrange(start, stop, step)]
+
+        assert type(key) in [int, long]
+        if not (0 <= key and (self._count == None or key < self._count)):
+            raise IndexError
 
         if key in self._cached:
             return self._cached[key]
@@ -23,9 +31,27 @@ class BasePyArray(BasePyStruct):
             return self._cached[key]
 
     def __setitem__(self, key, val):
-        assert type(key) in [int, long] and 0 <= key and (self._count == None or key < self._count)
+        if type(key) == slice:
+            start, stop, step = key.start, key.stop, key.step
+            if step is None:
+                step = 1
+            if issubclass(type(val), BasePyArray) or type(val) in [list, tuple, set]:
+                for i, j in enumerate(xrange(start, stop, step)):
+                    self[j] = val[i]
+            else:
+                for i in xrange(start, stop, step):
+                    self[i] = val
+            return
+
+        assert type(key) in [int, long]
+        if not (0 <= key and (self._count == None or key < self._count)):
+            raise IndexError
 
         self._cached[key] = self._type.copy(val)
+
+    def __iter__(self):
+        for i in xrange(self._count):
+            yield self[i]
 
 class MetaPyArray(type):
     def __init__(cls, name, bases, d):
