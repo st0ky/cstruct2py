@@ -1,5 +1,5 @@
 class PyBase(object):
-	def __init__(self, buf=None, index=0):
+    def __init__(self, buf=None, index=0):
         super(PyBase, self).__init__()
 
         if buf:
@@ -7,8 +7,8 @@ class PyBase(object):
 
         self._buf = buf
         self._index = index
-	
-	@property
+    
+    @property
     def val(self):
         raise NotImplemented()
 
@@ -31,4 +31,5 @@ class PyBase(object):
     @property
     def packed(self):
         buf = bytearray("\x00" * len(self))
-        return self.pack_into(buf, 0)
+        self.pack_into(buf, 0)
+        return buf
