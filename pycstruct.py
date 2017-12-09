@@ -15,6 +15,7 @@ class MetaPyStruct(type):
         off = 0
         for (name, field_cls) in d["_fields"]:
             assert type(name) is str, name
+            assert issubclass(field_cls, PyBase), field_cls
             d[name] = property(
                 partial(BasePyStruct._get_field, name=name, cls=field_cls, off=off),
                 partial(BasePyStruct._set_field, name=name, cls=field_cls, off=off)
