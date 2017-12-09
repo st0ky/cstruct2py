@@ -1,97 +1,94 @@
 import struct
 from collections import OrderedDict
+from functools import partial
 # from basics import *
+# from pycbase import *
 
 class MetaPyStruct(type):
     def __init__(cls, name, bases, d):
         super(MetaPyStruct, cls).__init__(name, (BasePyStruct,) + bases, d)
 
-        cls.size = sum(map(len, cls._fields.values()))
-        cls.__members__ = cls._fields.keys()
-        cls.__methods__ = []
-
     def __new__(cls, name, bases, d):
-        assert "_fields" in d and isinstance(d["_fields"], list)
-        d["_fields"] = OrderedDict(d["_fields"])
+        assert "_fields" in d
+        assert type(d["_fields"]) in [list, tuple]
+
+        off = 0
+        for (name, field_cls) in d["_fields"]:
+            assert type(name) is str, name
+            d[name] = property(
+                partial(BasePyStruct._get_field, name=name, cls=field_cls, off=off),
+                partial(BasePyStruct._set_field, name=name, cls=field_cls, off=off)
+                )
+            off += len(field_cls)
+
+        d["size"] = off
+        d["_fields"] = [name for (name, field_cls) in d["_fields"]]
+
         return type.__new__(cls, name, (BasePyStruct,) + bases, d)
-
-    def pack(cls, buf, index, inst):
-        offset = 0
-        for var, var_cls in inst._fields.items():
-            if var in inst.__dict__:
-                var = getattr(inst, var)
-                var_cls.pack(buf, index + offset, var)
-            elif inst._buf:
-                buf[index + offset : index + offset + len(var_cls)] = inst._buf[inst._index + offset : inst._index + offset + len(var_cls)]
-            
-            offset += len(var_cls)
-        return buf
-
-    def unpack(cls, buf, index):
-        return cls(buf, index)
 
     def __len__(cls):
         return cls.size
 
-    def copy(cls, val):
-        if type(val) is cls:
-            ret = cls(val._buf, val._index)
-            for name in cls._fields.keys():
-                if name in val.__dict__:
-                    setattr(ret, name, getattr(val, name))
-            return ret
-        if (type(val) in [str, bytearray] and len(val) >= cls.size):
-            return cls(val)
-
-        raise ValueError
-
-class BasePyStruct(object):
+class BasePyStruct(PyBase):
     def __init__(self, buf=None, index=0):
-        super(BasePyStruct, self).__init__()
+        super(BasePyStruct, self).__init__(buf, index)
 
-        if buf:
-            assert len(buf) >= index + len(self), "buf length cannot be less than %d" % len(self)
+        self._cache = {}
 
-        self._buf = buf
-        self._index = index
+    def _set_field(self, val, name, cls, off):
+        if not name in self._fields:
+            raise KeyError(name)
 
-    def __getattr__(self, name):
-        print "[%d] __getattr__ %s" % (id(self), name)
-        if name not in self._fields:
-            raise AttributeError("'%s' object has no attribute '%s'" % (self.__class__, name))
+        if not name in self._cache:
+            self._cache[name] = cls(self._buf, self._index + off)
 
-        field_offset = sum(map(len, self._fields.values()[:self._fields.keys().index(name)]))
-        super(BasePyStruct, self).__setattr__(name, self._fields[name](self._buf, self._index + field_offset))
+        self._cache[name].val = val
 
-        return getattr(self, name)
+    def _get_field(self, name, cls, off):
+        if not name in self._fields:
+            raise KeyError(name)
 
-    def __setattr__(self, name, val):
-        print "[%d] __setattr__ %s" % (id(self), name)
-        
-        if name in ["_buf", "_index", "_dirty"]:
-            return super(BasePyStruct, self).__setattr__(name, val)
+        if not name in self._cache:
+            self._cache[name] = cls(self._buf, self._index + off)
 
-        assert name in self._fields, "%s not in self._fields" % name
-        
-        val = self._fields[name].copy(val)
-
-        return super(BasePyStruct, self).__setattr__(name, val)
-
-    def __len__(self):
-        return type(self).size
+        return self._cache[name].val
 
     @property
-    def size(self):
-        return len(self)
+    def val(self):
+        return self
 
-    @property
-    def packed(self):
+    @val.setter
+    def val(self, val):
+        if type(val) is type(self):
+            for field in self._fields:
+                setattr(self, field, getattr(val, field))
+            return
+
+        if (type(val) in [str, bytearray] and len(val) >= len(self)):
+            tmp = type(self)(val)
+            self.val = tmp
+            return
+
+        raise ValueError(val)
+
+    def flush(self):
         if self._buf:
-            buf = self._buf
-        else:
-            buf = bytearray("\x00" * len(self))
+            for field in self._cache.values():
+                field.flush()
 
-        return type(self).pack(buf, self._index, self)
+        self._cache = {}
+
+    def pack_into(self, buf, index=0):
+        buf[index:index + len(self)] = self._buf[self._index:self._index + len(self)]
+        for field in self._cache.values():
+            field.pack_into(buf, field._index - self._index)
+
+        return buf
+
+    def parse_all(self):
+        for field in self._fields:
+            getattr(self, field)
+        return self
 
 
 class A(object):
@@ -101,10 +98,3 @@ class A(object):
 class B(object):
     __metaclass__ = MetaPyStruct
     _fields = [("a", A), ("b", A)]
-
-        
-sizeof = len
-
-# def make_struct(name, fields):
-#     assert type(fields) is dict
-#     globals()[name] = type(name, (BasePyStruct,), {"_fields" : fields})
