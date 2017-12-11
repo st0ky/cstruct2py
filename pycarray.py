@@ -1,40 +1,39 @@
-# from pycstruct import BasePyStruct
+# from pycbase import *
 
-class BasePyArray(BasePyStruct):
+class BasePyArray(PyBase):
     def __init__(self, buf=None, index=0):
         super(BasePyArray, self).__init__(buf, index)
-        self._cached = {}
-
-    def __getattr__(self, name):
-        print "1 __getattr__ %s" % name
-        return self.__dict__[name]
-
-    def __setattr__(self, name, val):
-        print "1 __setattr__ %s" % name
-        self.__dict__[name] = val
+        self._cache = {}
     
     def __getitem__(self, key):
-        if type(key) == slice:
+        if type(key) is slice:
             start, stop, step = key.start, key.stop, key.step
             if step is None:
                 step = 1
+            if start is None:
+                start = 0
+            if stop is None:
+                stop = self._count if not self._count is None else 0xffffffffffffffff 
             return [self[i] for i in xrange(start, stop, step)]
 
         assert type(key) in [int, long]
-        if not (0 <= key and (self._count == None or key < self._count)):
-            raise IndexError
+        if 0 > key or (self._count != None and key >= self._count):
+            raise IndexError(key)
 
-        if key in self._cached:
-            return self._cached[key]
-        else:
-            self._cached[key] = self._type(self._buf, self._index + len(self._type) * key)
-            return self._cached[key]
+        if not key in self._cache:
+            self._cache[key] = self._type(self._buf, self._index + len(self._type) * key)
+        
+        return self._cache[key].val
 
     def __setitem__(self, key, val):
-        if type(key) == slice:
+        if type(key) is slice:
             start, stop, step = key.start, key.stop, key.step
             if step is None:
                 step = 1
+            if start is None:
+                start = 0
+            if stop is None:
+                stop = self._count if not self._count is None else 0xffffffffffffffff 
             if issubclass(type(val), BasePyArray) or type(val) in [list, tuple, set]:
                 for i, j in enumerate(xrange(start, stop, step)):
                     self[j] = val[i]
@@ -44,19 +43,66 @@ class BasePyArray(BasePyStruct):
             return
 
         assert type(key) in [int, long]
-        if not (0 <= key and (self._count == None or key < self._count)):
-            raise IndexError
+        if 0 > key or (self._count != None and key >= self._count):
+            raise IndexError(key)
 
-        self._cached[key] = self._type.copy(val)
+        if not key in self._cache:
+            self._cache[key] = self._type(self._buf, self._index + len(self._type) * key)
+
+        self._cache[key].val = val
 
     def __iter__(self):
-        for i in xrange(self._count):
-            yield self[i]
+        if self._count is None:
+            i = 0
+            while True:
+                yield self[i]
+                i += 1
+        else:
+            for i in xrange(self._count):
+                yield self[i]
+
+    @property
+    def val(self):
+        return self
+
+    @val.setter
+    def val(self, val):
+        if issubclass(type(val), BasePyArray) or type(val) in [list, tuple, set]:
+            for i, item in enumerate(val):
+                self[j] = item
+            return
+
+        if (type(val) in [str, bytearray] and len(val) >= len(self)):
+            tmp = type(self)(val)
+            self.val = tmp
+            return
+
+        raise ValueError(val)
+
+    def flush(self):
+        for i, item in self._cache.items():
+            item.flush()
+        self._cache = {}
+
+    def pack_into(self, buf, index=0):
+        if self._buf:
+            buf[index:index + len(self)] = self._buf[self._index:self._index + len(self)]
+        for i, item in self._cache.items():
+            item.pack_into(buf, item._index - self._index)
+
+        return buf
+
+    def parse_all(self):
+        if not self._count is None:
+            for i in self:
+                _ = i
+
 
 class MetaPyArray(type):
     def __init__(cls, name, bases, d):
-        assert "_type" in d and "_count" in d and (d["_count"] is None or (type(d["_count"]) in [int, long] and d["_count"] >= 0))
-
+        assert "_type" in d
+        assert "_count" in d
+        assert (d["_count"] is None or (type(d["_count"]) in [int, long] and d["_count"] >= 0))
 
         super(MetaPyArray, cls).__init__(name, (BasePyArray,) + bases, d)
 
@@ -68,28 +114,8 @@ class MetaPyArray(type):
     def __new__(cls, name, bases, d):
         return type.__new__(cls, name, (BasePyArray,) + bases, d)
 
-    def pack(cls, buf, index, inst):
-        for ind, val in inst._cached.items():
-            cls._type.pack(buf, index + ind * len(cls._type), val)
-        return buf
-
-    def unpack(cls, buf, index):
-        return cls(buf, index)
-
     def __len__(cls):
         return cls.size
-
-    def copy(cls, val):
-        if type(val) is cls:
-            ret = cls(val._buf, val._index)
-            for i, v in cls._cached.items():
-                ret[i] = v
-            return ret
-        
-        if type(val) in [str, bytearray] and len(val) >= cls.size:
-            return cls(val)
-        
-        raise ValueError
 
 
 class iArr(object):
