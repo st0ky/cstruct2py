@@ -80,7 +80,8 @@ class BasePyStruct(PyBase):
         self._cache = {}
 
     def pack_into(self, buf, index=0):
-        buf[index:index + len(self)] = self._buf[self._index:self._index + len(self)]
+        if self._buf:
+            buf[index:index + len(self)] = self._buf[self._index:self._index + len(self)]
         for field in self._cache.values():
             field.pack_into(buf, field._index - self._index)
 
