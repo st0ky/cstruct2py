@@ -1,3 +1,6 @@
 [submodule "pycparser"]
 	path = pycparser
 	url = https://github.com/eliben/pycparser.git
+[submodule "pcpp"]
+	path = pcpp
+	url = https://github.com/ned14/pcpp.git
