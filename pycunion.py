@@ -1,4 +1,6 @@
-# from pycbase import *
+from pycbase import *
+from pycstruct import *
+from basics import *
 
 class BasePyUnion(PyBase):
     def __init__(self, buf=None, index=0):
@@ -101,8 +103,8 @@ class MetaPyUnion(type):
     def __len__(cls):
         return cls.size
 
-class A(object):
-    __metaclass__ = MetaPyStruct
-    _fields = [("x", py_uint32_t), ("y", py_uint32_t)]
+# class A(object):
+#     __metaclass__ = MetaPyStruct
+#     _fields = [("x", py_uint32_t), ("y", py_uint32_t)]
 
-B = MetaPyUnion("B", (), {"_fields" : {"a" : py_uint32_t, "b" : py_uint64_t, "c" : A}})
+# B = MetaPyUnion("B", (), {"_fields" : {"a" : py_uint32_t, "b" : py_uint64_t, "c" : A}})

@@ -1,4 +1,4 @@
-# from pycbase import *
+from pycbase import *
 import struct
 
 class MetaPyBasic(type):

@@ -1,9 +1,11 @@
 import cStringIO
+import pycparser
 from pycparser.c_parser import CParser
 import pcpp
-# from basics import *
-# from pycstruct import *
-# from pycarray import *
+from basics import *
+from pycstruct import *
+from pycunion import *
+from pycarray import *
 
 names_to_pycstructs = {}
 names_to_pycstructs[('uint64_t', )] = py_uint64_t
@@ -61,6 +63,7 @@ def _field_handler(node):
     return name, typ
 
 def struct_handler(node):
+    global names_to_pycstructs
     assert type(node) == pycparser.c_ast.Struct
     name = node.name
     if not node.decls:
@@ -77,13 +80,13 @@ def struct_handler(node):
         name = "struct_num_%d" % structs_num
 
     val = MetaPyStruct(name, (), {"_fields" : fields})
-    global names_to_pycstructs
     names_to_pycstructs[name] = val
     names_to_pycstructs[(name, )] = val
     exec(global_assignment % {"name" : name, "var" : "val"})
     return val
 
 def union_handler(node):
+    global names_to_pycstructs
     assert type(node) == pycparser.c_ast.Union
     name = node.name
     if not node.decls:
@@ -100,7 +103,6 @@ def union_handler(node):
         name = "unions_num_%d" % unions_num
 
     val = MetaPyUnion(name, (), {"_fields" : fields})
-    global names_to_pycstructs
     names_to_pycstructs[name] = val
     names_to_pycstructs[(name, )] = val
     exec(global_assignment % {"name" : name, "var" : "val"})

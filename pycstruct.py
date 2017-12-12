@@ -1,8 +1,7 @@
 import struct
-from collections import OrderedDict
 from functools import partial
-# from basics import *
-# from pycbase import *
+from basics import *
+from pycbase import *
 
 class MetaPyStruct(type):
     def __init__(cls, name, bases, d):
@@ -93,10 +92,10 @@ class BasePyStruct(PyBase):
         return self
 
 
-class A(object):
-    __metaclass__ = MetaPyStruct
-    _fields = [("x", py_uint64_t), ("y", py_uint64_t)]
+# class A(object):
+#     __metaclass__ = MetaPyStruct
+#     _fields = [("x", py_uint64_t), ("y", py_uint64_t)]
 
-class B(object):
-    __metaclass__ = MetaPyStruct
-    _fields = [("a", A), ("b", A)]
+# class B(object):
+#     __metaclass__ = MetaPyStruct
+#     _fields = [("a", A), ("b", A)]

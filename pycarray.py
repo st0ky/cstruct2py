@@ -1,4 +1,6 @@
-# from pycbase import *
+from pycbase import *
+from pycstruct import *
+from basics import *
 
 class BasePyArray(PyBase):
     def __init__(self, buf=None, index=0):
@@ -118,19 +120,19 @@ class MetaPyArray(type):
         return cls.size
 
 
-class iArr(object):
-    __metaclass__ = MetaPyArray
-    _type = py_uint64_t
-    _count = 5
+# class iArr(object):
+#     __metaclass__ = MetaPyArray
+#     _type = py_uint64_t
+#     _count = 5
 
-class iArrA(object):
-    __metaclass__ = MetaPyArray
-    _type = iArr
-    _count = 5
+# class iArrA(object):
+#     __metaclass__ = MetaPyArray
+#     _type = iArr
+#     _count = 5
 
 
 
-class bArr(object):
-    __metaclass__ = MetaPyArray
-    _type = B
-    _count = 5
+# class bArr(object):
+#     __metaclass__ = MetaPyArray
+#     _type = B
+#     _count = 5
