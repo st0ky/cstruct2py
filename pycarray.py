@@ -71,7 +71,7 @@ class BasePyArray(PyBase):
     def val(self, val):
         if issubclass(type(val), BasePyArray) or type(val) in [list, tuple, set]:
             for i, item in enumerate(val):
-                self[j] = item
+                self[i] = item
             return
 
         if (type(val) in [str, bytearray] and len(val) >= len(self)):
@@ -97,7 +97,7 @@ class BasePyArray(PyBase):
     def parse_all(self):
         if not self._count is None:
             for i in self:
-                _ = i
+                pass
 
 
 class MetaPyArray(type):
