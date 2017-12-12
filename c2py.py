@@ -1,4 +1,6 @@
-import pycparser
+import cStringIO
+from pycparser.c_parser import CParser
+import pcpp
 # from basics import *
 # from pycstruct import *
 # from pycarray import *
@@ -18,16 +20,19 @@ names_to_pycstructs[('long', )] = py_int32_t
 names_to_pycstructs[('int', )] = py_int32_t
 names_to_pycstructs[('short', )] = py_int16_t
 names_to_pycstructs[('byte', )] = py_int8_t
+names_to_pycstructs[('char', )] = py_int8_t
 names_to_pycstructs[('signed', 'long', 'long', )] = py_int64_t
 names_to_pycstructs[('signed', 'long', )] = py_int32_t
 names_to_pycstructs[('signed', 'int', )] = py_int32_t
 names_to_pycstructs[('signed', 'short', )] = py_int16_t
 names_to_pycstructs[('signed', 'byte', )] = py_int8_t
+names_to_pycstructs[('signed', 'char', )] = py_int8_t
 names_to_pycstructs[('unsigned', 'long', 'long', )] = py_int64_t
 names_to_pycstructs[('unsigned', 'long', )] = py_int32_t
 names_to_pycstructs[('unsigned', 'int', )] = py_int32_t
 names_to_pycstructs[('unsigned', 'short', )] = py_int16_t
 names_to_pycstructs[('unsigned', 'byte', )] = py_int8_t
+names_to_pycstructs[('unsigned', 'char', )] = py_int8_t
 
 sizeof = len
 
@@ -46,6 +51,7 @@ def typedef_handler(node):
     name = node.name
     val = parse_node(node.type)
     names_to_pycstructs[name] = val
+    names_to_pycstructs[(name, )] = val
     exec(global_assignment % {"name" : name, "var" : "val"})
 
 def _field_handler(node):
@@ -58,7 +64,7 @@ def struct_handler(node):
     assert type(node) == pycparser.c_ast.Struct
     name = node.name
     if not node.decls:
-        return names_to_pycstructs[name]
+        return names_to_pycstructs[(name, )]
 
     fields = []
     for decl in node.decls:
@@ -73,6 +79,7 @@ def struct_handler(node):
     val = MetaPyStruct(name, (), {"_fields" : fields})
     global names_to_pycstructs
     names_to_pycstructs[name] = val
+    names_to_pycstructs[(name, )] = val
     exec(global_assignment % {"name" : name, "var" : "val"})
     return val
 
@@ -80,7 +87,7 @@ def union_handler(node):
     assert type(node) == pycparser.c_ast.Union
     name = node.name
     if not node.decls:
-        return names_to_pycstructs[name]
+        return names_to_pycstructs[(name, )]
 
     fields = []
     for decl in node.decls:
@@ -90,11 +97,12 @@ def union_handler(node):
     global unions_num
     unions_num += 1
     if name == None:
-        name = "struct_num_%d" % unions_num
+        name = "unions_num_%d" % unions_num
 
     val = MetaPyUnion(name, (), {"_fields" : fields})
     global names_to_pycstructs
     names_to_pycstructs[name] = val
+    names_to_pycstructs[(name, )] = val
     exec(global_assignment % {"name" : name, "var" : "val"})
     return val
 
@@ -105,7 +113,6 @@ def array_handler(node):
     assert type(num) in [long, int]
     global arrays_num
     arrays_num += 1
-    print num
     return MetaPyArray("array_num_%d" % arrays_num, (), {"_type" : typ, "_count" : num})
 
 def type_handler(node):
@@ -130,6 +137,10 @@ def constant_handler(node):
 
     assert 0, "Unknown constant type: %s" % node.type
 
+def ptr_handler(node):
+    assert type(node) is pycparser.c_ast.PtrDecl
+    return py_uint64_t
+
 def parse_node(node):
     if type(node) is pycparser.c_ast.IdentifierType:
         return type_handler(node)
@@ -142,6 +153,9 @@ def parse_node(node):
 
     if type(node) is pycparser.c_ast.ArrayDecl:
         return array_handler(node)
+
+    if type(node) is pycparser.c_ast.PtrDecl:
+        return ptr_handler(node)
 
     if type(node) is pycparser.c_ast.Typedef:
         return typedef_handler(node)
@@ -167,4 +181,25 @@ def parse_node(node):
 
     else:
         assert 0, "Unknown handler for type: %s" % repr(type(node))
+
+def parse_file(file_path, save_tmp=False):
+    pre = pcpp.Preprocessor()
+    pre.line_directive = None
+    with open(file_path, "rb") as f:
+        data = f.read()
+    pre.parse(data)
+    buff = cStringIO.StringIO()
+    pre.write(buff)
+    processed = buff.getvalue()
+    if save_tmp:
+        tmp_path = os.path.abspath(file_path) + ".tmp"
+        with open(tmp_path, "wb") as f:
+            f.write(processed)
+    cparse = CParser()
+    contents = cparse.parse(processed, file_path)
+
+    for ex in contents.ext:
+        ex.show()
+        parse_node(ex)
+
 
