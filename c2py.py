@@ -1,11 +1,12 @@
+import os
 import cStringIO
-import pycparser
 from pycparser.c_parser import CParser
 import pcpp
-from basics import *
-from pycstruct import *
-from pycunion import *
-from pycarray import *
+import pycparser
+from .basics import *
+from .pycstruct import *
+from .pycunion import *
+from .pycarray import *
 
 names_to_pycstructs = {}
 names_to_pycstructs[('uint64_t', )] = py_uint64_t
@@ -57,7 +58,7 @@ def typedef_handler(node):
     exec(global_assignment % {"name" : name, "var" : "val"})
 
 def _field_handler(node):
-    assert type(node) == pycparser.c_ast.Decl
+    assert type(node) is pycparser.c_ast.Decl
     name = node.name
     typ = parse_node(node.type)
     return name, typ
@@ -143,6 +144,13 @@ def ptr_handler(node):
     assert type(node) is pycparser.c_ast.PtrDecl
     return py_uint64_t
 
+def decl_handler(node):
+    assert type(node) is pycparser.c_ast.Decl
+    if node.name is None:
+        return parse_node(node.type)
+
+    assert False, "Unknown Decl %s" % type(node)
+
 def parse_node(node):
     if type(node) is pycparser.c_ast.IdentifierType:
         return type_handler(node)
@@ -168,6 +176,9 @@ def parse_node(node):
     if type(node) is pycparser.c_ast.TypeDecl:
         return typedecl_handler(node)
 
+    if type(node) is pycparser.c_ast.Decl:
+        return decl_handler(node)
+
     if type(node) == pycparser.c_ast.Constant:
         return constant_handler(node)
 
@@ -183,25 +194,46 @@ def parse_node(node):
 
     else:
         assert 0, "Unknown handler for type: %s" % repr(type(node))
-
-def parse_file(file_path, save_tmp=False):
+get_dir = lambda x: os.path.dirname(os.path.abspath(x))
+def parse_string(data, file_name="<unknown>", include_dirs=[get_dir(__file__)], save_tmp=False, debuglevel=0):
     pre = pcpp.Preprocessor()
     pre.line_directive = None
-    with open(file_path, "rb") as f:
-        data = f.read()
+    for i in include_dirs:
+        pre.add_path(i)
     pre.parse(data)
     buff = cStringIO.StringIO()
     pre.write(buff)
     processed = buff.getvalue()
     if save_tmp:
-        tmp_path = os.path.abspath(file_path) + ".tmp"
+        tmp_path = os.path.abspath(file_name) + ".tmp"
+        if debuglevel:
+            print "Creating tmp file: %s" % tmp_path
         with open(tmp_path, "wb") as f:
             f.write(processed)
+
+    for macro_name, macro in pre.macros.items():
+        if not macro.arglist:
+            tmp = pre.evalexpr(macro.value, get_strings=True)
+            exec(global_assignment % {"name" : macro_name, "var" : "tmp"})
+
     cparse = CParser()
-    contents = cparse.parse(processed, file_path)
+    contents = cparse.parse(processed, file_name)
 
     for ex in contents.ext:
-        ex.show()
+        if debuglevel:
+            ex.show()
         parse_node(ex)
+
+    if save_tmp:
+        os.unlink(tmp_path)
+
+def parse_file(file_path, include_dirs=None, save_tmp=False, debuglevel=0):
+    if include_dirs is None:
+        include_dirs = [get_dir(__file__), get_dir(file_path)]
+
+    with open(file_path, "rb") as f:
+        data = f.read()
+
+    parse_string(data, file_path, include_dirs, save_tmp, debuglevel)
 
 
