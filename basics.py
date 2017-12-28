@@ -3,15 +3,15 @@ import struct
 
 class MetaPyBasic(type):
     "Basic value (just int ot char, etc.) no array or struct"
-    def __init__(cls, name, bases, d):
-        super(MetaPyBasic, cls).__init__(name, (BasePyBasic,) + bases, d)
+    def __init__(cls, cls_name, bases, d):
+        super(MetaPyBasic, cls).__init__(cls_name, (BasePyBasic,) + bases, d)
         
         assert "_pattern" in d
         cls._struct = struct.Struct(cls._pattern)
         cls.size = cls._struct.size
     
-    def __new__(cls, name, bases, d):
-        return type.__new__(cls, name, (BasePyBasic,) + bases, d)
+    def __new__(cls, cls_name, bases, d):
+        return type.__new__(cls, cls_name, (BasePyBasic,) + bases, d)
 
     def __len__(cls):
         return cls.size

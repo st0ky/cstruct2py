@@ -101,20 +101,20 @@ class BasePyArray(PyBase):
 
 
 class MetaPyArray(type):
-    def __init__(cls, name, bases, d):
+    def __init__(cls, cls_name, bases, d):
         assert "_type" in d
         assert "_count" in d
         assert (d["_count"] is None or (type(d["_count"]) in [int, long] and d["_count"] >= 0))
 
-        super(MetaPyArray, cls).__init__(name, (BasePyArray,) + bases, d)
+        super(MetaPyArray, cls).__init__(cls_name, (BasePyArray,) + bases, d)
 
         if cls._count:
             cls.size = len(cls._type) * cls._count
         else:
             cls.size = 0
 
-    def __new__(cls, name, bases, d):
-        return type.__new__(cls, name, (BasePyArray,) + bases, d)
+    def __new__(cls, cls_name, bases, d):
+        return type.__new__(cls, cls_name, (BasePyArray,) + bases, d)
 
     def __len__(cls):
         return cls.size

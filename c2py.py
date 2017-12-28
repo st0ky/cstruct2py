@@ -81,6 +81,7 @@ def struct_handler(node):
         name = "struct_num_%d" % structs_num
 
     val = MetaPyStruct(name, (), {"_fields" : fields})
+    val.__module__ = val.__module__.replace("pycstruct", "c2py")
     names_to_pycstructs[name] = val
     names_to_pycstructs[(name, )] = val
     exec(global_assignment % {"name" : name, "var" : "val"})
@@ -104,6 +105,7 @@ def union_handler(node):
         name = "unions_num_%d" % unions_num
 
     val = MetaPyUnion(name, (), {"_fields" : fields})
+    val.__module__ = val.__module__.replace("pycunion", "c2py")
     names_to_pycstructs[name] = val
     names_to_pycstructs[(name, )] = val
     exec(global_assignment % {"name" : name, "var" : "val"})
@@ -116,7 +118,10 @@ def array_handler(node):
     assert type(num) in [long, int]
     global arrays_num
     arrays_num += 1
-    return MetaPyArray("array_num_%d" % arrays_num, (), {"_type" : typ, "_count" : num})
+    val = MetaPyArray("array_num_%d" % arrays_num, (), {"_type" : typ, "_count" : num})
+    val.__module__ = val.__module__.replace("pycarray", "c2py")
+    return val
+
 
 def type_handler(node):
     assert type(node) is pycparser.c_ast.IdentifierType

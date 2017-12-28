@@ -76,10 +76,10 @@ class BasePyUnion(PyBase):
     
 
 class MetaPyUnion(type):
-    def __init__(cls, name, bases, d):
-        super(MetaPyUnion, cls).__init__(name, (BasePyUnion,) + bases, d)
+    def __init__(cls, cls_name, bases, d):
+        super(MetaPyUnion, cls).__init__(cls_name, (BasePyUnion,) + bases, d)
 
-    def __new__(cls, name, bases, d):
+    def __new__(cls, cls_name, bases, d):
         assert "_fields" in d
         assert type(d["_fields"]) in [list, tuple, dict]
         if type(d["_fields"]) is dict:
@@ -98,7 +98,7 @@ class MetaPyUnion(type):
         d["size"] = size
         d["_fields"] = [name for (name, field_cls) in d["_fields"]]
 
-        return type.__new__(cls, name, (BasePyUnion,) + bases, d)
+        return type.__new__(cls, cls_name, (BasePyUnion,) + bases, d)
 
     def __len__(cls):
         return cls.size

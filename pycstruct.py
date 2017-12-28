@@ -4,10 +4,10 @@ from basics import *
 from pycbase import *
 
 class MetaPyStruct(type):
-    def __init__(cls, name, bases, d):
-        super(MetaPyStruct, cls).__init__(name, (BasePyStruct,) + bases, d)
+    def __init__(cls, cls_name, bases, d):
+        super(MetaPyStruct, cls).__init__(cls_name, (BasePyStruct,) + bases, d)
 
-    def __new__(cls, name, bases, d):
+    def __new__(cls, cls_name, bases, d):
         assert "_fields" in d
         assert type(d["_fields"]) in [list, tuple]
 
@@ -24,7 +24,7 @@ class MetaPyStruct(type):
         d["size"] = off
         d["_fields"] = [name for (name, field_cls) in d["_fields"]]
 
-        return type.__new__(cls, name, (BasePyStruct,) + bases, d)
+        return type.__new__(cls, cls_name, (BasePyStruct,) + bases, d)
 
     def __len__(cls):
         return cls.size
