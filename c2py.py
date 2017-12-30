@@ -4,9 +4,9 @@ from pycparser.c_parser import CParser
 import pcpp
 import pycparser
 from .basics import *
-from .pycstruct import *
-from .pycunion import *
-from .pycarray import *
+from .pycstruct import MetaPyStruct
+from .pycunion import MetaPyUnion
+from .pycarray import MetaPyArray
 
 names_to_pycstructs = {}
 names_to_pycstructs[('uint64_t', )] = py_uint64_t
