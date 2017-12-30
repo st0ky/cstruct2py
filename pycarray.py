@@ -5,6 +5,8 @@ from basics import *
 class BasePyArray(PyBase):
     def __init__(self, buf=None, index=0):
         super(BasePyArray, self).__init__(buf, index)
+        if self._buf is not None and self._count is None:
+            assert len(self._buf) % len(self._type) == 0, "buf len must be multiple of %d" % len(self._type)
         self._cache = {}
     
     def __getitem__(self, key):
@@ -15,16 +17,35 @@ class BasePyArray(PyBase):
             if start is None:
                 start = 0
             if stop is None:
-                stop = self._count if not self._count is None else 0xffffffffffffffff 
-            return [self[i] for i in xrange(start, stop, step)]
+                stop = self._count if not self._count is None else 0xffffffffffffffffffff
+
+            res = []
+            try:
+                for i in xrange(start, stop, step):
+                    res.append(self[i])
+            except IndexError:
+                if self._count is not None:
+                    raise
+
+            return res
 
         assert type(key) in [int, long]
+        
+        if self._count is None and not key in self._cache and (self._buf is None or self._index + len(self._type) * key >= len(self._buf)):
+            raise IndexError(key)
+
         if 0 > key or (self._count != None and key >= self._count):
             raise IndexError(key)
 
         if not key in self._cache:
-            self._cache[key] = self._type(self._buf, self._index + len(self._type) * key)
-        
+            if self._buf is not None:
+                self._cache[key] = self._type(self._buf, self._index + len(self._type) * key)
+            else:
+                self._cache[key] = self._type()
+
+            if self._count is None and len(self._type) * key > self.size:
+                self.size = len(self._type) * key
+
         return self._cache[key].val
 
     def __setitem__(self, key, val):
@@ -35,29 +56,48 @@ class BasePyArray(PyBase):
             if start is None:
                 start = 0
             if stop is None:
-                stop = self._count if not self._count is None else 0xffffffffffffffff 
-            if issubclass(type(val), BasePyArray) or type(val) in [list, tuple, set]:
-                for i, j in enumerate(xrange(start, stop, step)):
-                    self[j] = val[i]
-            else:
-                for i in xrange(start, stop, step):
-                    self[i] = val
+                stop = self._count if not self._count is None else 0xffffffffffffffffffff
+            try:
+                if issubclass(type(val), BasePyArray) or type(val) in [list, tuple, set]:
+                    for i, j in enumerate(xrange(start, stop, step)):
+                        self[j] = val[i]
+                else:
+                    for i in xrange(start, stop, step):
+                        self[i] = val
+            except ValueError:
+                if self._count is not None:
+                    raise
+
             return
 
-        assert type(key) in [int, long]
+        if self._count is None and not key in self._cache and self._buf is not None and self._index + len(self._type) * key >= len(self._buf):
+            raise IndexError(key)
+
         if 0 > key or (self._count != None and key >= self._count):
             raise IndexError(key)
 
         if not key in self._cache:
-            self._cache[key] = self._type(self._buf, self._index + len(self._type) * key)
+            if self._buf is not None:
+                self._cache[key] = self._type(self._buf, self._index + len(self._type) * key)
+            else:
+                self._cache[key] = self._type()
+
+            if self._count is None and len(self._type) * key > self.size:
+                self.size = len(self._type) * key
 
         self._cache[key].val = val
 
     def __iter__(self):
+        if self._count is None and self._buf is None:
+            return
+
         if self._count is None:
             i = 0
             while True:
-                yield self[i]
+                try:
+                    yield self[i]
+                except IndexError:
+                    return
                 i += 1
         else:
             for i in xrange(self._count):
