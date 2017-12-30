@@ -115,7 +115,7 @@ def array_handler(node):
     assert type(node) is pycparser.c_ast.ArrayDecl
     typ = parse_node(node.type)
     num = parse_node(node.dim)
-    assert type(num) in [long, int]
+    assert num is None or type(num) in [long, int]
     global arrays_num
     arrays_num += 1
     val = MetaPyArray("array_num_%d" % arrays_num, (), {"_type" : typ, "_count" : num})
@@ -157,6 +157,9 @@ def decl_handler(node):
     assert False, "Unknown Decl %s" % type(node)
 
 def parse_node(node):
+    if node is None:
+        return node
+
     if type(node) is pycparser.c_ast.IdentifierType:
         return type_handler(node)
 
