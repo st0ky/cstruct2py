@@ -139,6 +139,17 @@ class BasePyArray(PyBase):
             for i in self:
                 pass
 
+    def __str__(self):
+        res = ", ".join(map(str, self))
+        return "[%s]" % res
+
+    def _to_repr(self):
+        res = ", ".join(map(str, self))
+        data = super(BasePyArray, self)._to_repr()
+        if data:
+            res = ", ".join([data, res])
+        return res
+
 
 class MetaPyArray(type):
     def __init__(cls, cls_name, bases, d):

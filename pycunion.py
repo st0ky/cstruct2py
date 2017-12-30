@@ -73,6 +73,17 @@ class BasePyUnion(PyBase):
 
     def parse_all(self):
         pass
+
+    def __str__(self):
+        res = ", ".join("%s=%s" % (field, getattr(self, field)) for field in self._fields)
+        return "dict(%s)" % res
+
+    def _to_repr(self):
+        res = ", ".join("%s=%s" % (field, getattr(self, field)) for field in self._fields)
+        data = super(BasePyUnion, self)._to_repr()
+        if data:
+            res = ", ".join([data, res])
+        return res
     
 
 class MetaPyUnion(type):

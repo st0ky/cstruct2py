@@ -91,6 +91,19 @@ class BasePyStruct(PyBase):
             getattr(self, field)
         return self
 
+    def __str__(self):
+        res = ", ".join("%s=%s" % (field, getattr(self, field)) for field in self._fields)
+        return "dict(%s)" % res
+
+    def _to_repr(self):
+        res = ", ".join("%s=%s" % (field, getattr(self, field)) for field in self._fields)
+        data = super(BasePyStruct, self)._to_repr()
+        if data:
+            res = ", ".join([data, res])
+        return res
+
+
+
 
 # class A(object):
 #     __metaclass__ = MetaPyStruct
