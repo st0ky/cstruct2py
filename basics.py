@@ -6,6 +6,7 @@ class MetaPyBasic(type):
     def __init__(cls, cls_name, bases, d):
         super(MetaPyBasic, cls).__init__(cls_name, (BasePyBasic,) + bases, d)
         
+        assert "_alignment" in d
         assert "_pattern" in d
         cls._struct = struct.Struct(cls._pattern)
         cls.size = cls._struct.size
@@ -70,32 +71,40 @@ class BasePyBasic(PyBase):
 
 class py_uint64_t:
     __metaclass__ = MetaPyBasic
-    _pattern = "Q"        
+    _pattern = "Q"
+    _alignment = 8
 
 class py_uint32_t:
     __metaclass__ = MetaPyBasic
     _pattern = "I"        
+    _alignment = 4
 
 class py_uint16_t:
     __metaclass__ = MetaPyBasic
     _pattern = "H"        
+    _alignment = 2
 
 class py_uint8_t:
     __metaclass__ = MetaPyBasic
     _pattern = "B"
+    _alignment = 1
 
 class py_int64_t:
     __metaclass__ = MetaPyBasic
     _pattern = "q"        
+    _alignment = 8
 
 class py_int32_t:
     __metaclass__ = MetaPyBasic
     _pattern = "i"        
+    _alignment = 4
 
 class py_int16_t:
     __metaclass__ = MetaPyBasic
     _pattern = "h"        
+    _alignment = 2
 
 class py_int8_t:
     __metaclass__ = MetaPyBasic
     _pattern = "b"        
+    _alignment = 1

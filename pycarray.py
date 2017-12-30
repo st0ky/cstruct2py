@@ -159,6 +159,7 @@ class MetaPyArray(type):
 
         super(MetaPyArray, cls).__init__(cls_name, (BasePyArray,) + bases, d)
 
+        cls._alignment = cls._type._alignment
         if cls._count:
             cls.size = len(cls._type) * cls._count
         else:

@@ -3,6 +3,8 @@ from functools import partial
 from basics import *
 from pycbase import *
 
+pad = lambda x, y: x + ((-x) % y)
+
 class MetaPyStruct(type):
     def __init__(cls, cls_name, bases, d):
         super(MetaPyStruct, cls).__init__(cls_name, (BasePyStruct,) + bases, d)
@@ -12,16 +14,24 @@ class MetaPyStruct(type):
         assert type(d["_fields"]) in [list, tuple]
 
         off = 0
+        _alignment = 1
         for (name, field_cls) in d["_fields"]:
             assert type(name) is str, name
             assert issubclass(field_cls, PyBase), field_cls
+
+            if field_cls._alignment > _alignment:
+                _alignment = field_cls._alignment
+
+            off = pad(off, field_cls._alignment)
+
             d[name] = property(
                 partial(BasePyStruct._get_field, name=name, cls=field_cls, off=off),
                 partial(BasePyStruct._set_field, name=name, cls=field_cls, off=off)
                 )
             off += len(field_cls)
 
-        d["size"] = off
+        d["size"] = pad(off, _alignment)
+        d["_alignment"] = _alignment
         d["_fields"] = [name for (name, field_cls) in d["_fields"]]
 
         return type.__new__(cls, cls_name, (BasePyStruct,) + bases, d)

@@ -97,9 +97,15 @@ class MetaPyUnion(type):
             d["_fields"] = d["_fields"].items()
 
         size = 0
+        _alignment = 1
+        
         for (name, field_cls) in d["_fields"]:
             assert type(name) is str, name
             assert issubclass(field_cls, PyBase), field_cls
+            
+            if field_cls._alignment > _alignment:
+                _alignment = field_cls._alignment
+
             d[name] = property(
                 partial(BasePyUnion._get_field, name=name, cls=field_cls),
                 partial(BasePyUnion._set_field, name=name, cls=field_cls)
@@ -107,6 +113,7 @@ class MetaPyUnion(type):
             size = max(size, len(field_cls))
 
         d["size"] = size
+        d["_alignment"] = _alignment
         d["_fields"] = [name for (name, field_cls) in d["_fields"]]
 
         return type.__new__(cls, cls_name, (BasePyUnion,) + bases, d)
