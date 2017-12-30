@@ -11,7 +11,9 @@ class MetaPyStruct(type):
 
     def __new__(cls, cls_name, bases, d):
         assert "_fields" in d
-        assert type(d["_fields"]) in [list, tuple]
+        assert type(d["_fields"]) in [list, tuple, dict]
+        if type(d["_fields"]) is dict:
+            d["_fields"] = d["_fields"].items()
 
         off = 0
         _alignment = 1
