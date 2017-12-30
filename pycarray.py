@@ -46,7 +46,7 @@ class BasePyArray(PyBase):
             if self._count is None and len(self._type) * key > self.size:
                 self.size = len(self._type) * key
 
-        return self._cache[key].val
+        return self._cache[key]._val_property
 
     def __setitem__(self, key, val):
         if type(key) is slice:
@@ -85,7 +85,7 @@ class BasePyArray(PyBase):
             if self._count is None and len(self._type) * key > self.size:
                 self.size = len(self._type) * key
 
-        self._cache[key].val = val
+        self._cache[key]._val_property = val
 
     def __iter__(self):
         if self._count is None and self._buf is None:
@@ -104,11 +104,11 @@ class BasePyArray(PyBase):
                 yield self[i]
 
     @property
-    def val(self):
+    def _val_property(self):
         return self
 
-    @val.setter
-    def val(self, val):
+    @_val_property.setter
+    def _val_property(self, val):
         if issubclass(type(val), BasePyArray) or type(val) in [list, tuple, set]:
             for i, item in enumerate(val):
                 self[i] = item
@@ -116,7 +116,7 @@ class BasePyArray(PyBase):
 
         if (type(val) in [str, bytearray] and len(val) >= len(self)):
             tmp = type(self)(val)
-            self.val = tmp
+            self._val_property = tmp
             return
 
         raise ValueError(val)

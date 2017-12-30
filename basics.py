@@ -29,20 +29,20 @@ class BasePyBasic(PyBase):
 
     def flush(self):
         if not self._cache is None and self._buf:
-            self._struct.pack_into(self._buf, self._index, self.val)
+            self._struct.pack_into(self._buf, self._index, self._val_property)
 
         self._cache = None
 
     def pack_into(self, buf, index=0):
-        self._struct.pack_into(buf, index, self.val)
+        self._struct.pack_into(buf, index, self._val_property)
 
         return buf
 
     def parse_all(self):
-        return self.val
+        return self._val_property
     
     @property
-    def val(self):
+    def _val_property(self):
         if self._cache is None:
             if self._buf:
                 self._cache = self._struct.unpack_from(self._buf, self._index)[0]
@@ -51,8 +51,8 @@ class BasePyBasic(PyBase):
         
         return self._cache
 
-    @val.setter
-    def val(self, val):
+    @_val_property.setter
+    def _val_property(self, val):
         if type(val) in [int, long]:
             self._cache = val
             return

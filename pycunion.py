@@ -22,33 +22,33 @@ class BasePyUnion(PyBase):
             raise KeyError(name)
 
         if self._last.name == name:
-            self._last.value.val = val
+            self._last.value._val_property = val
             return
         
         self._flush_to_cache()
         self._last.name = name
         self._last.value = cls(self._cache, 0)
-        self._last.value.val = val
+        self._last.value._val_property = val
 
     def _get_field(self, name, cls):
         if not name in self._fields:
             raise KeyError(name)
 
         if self._last.name == name:
-            return self._last.value.val
+            return self._last.value._val_property
 
         self._flush_to_cache()
         self._last.name = name
         self._last.value = cls(self._cache, 0)
 
-        return self._last.value.val
+        return self._last.value._val_property
 
     @property
-    def val(self):
+    def _val_property(self):
         return self
 
-    @val.setter
-    def val(self, val):
+    @_val_property.setter
+    def _val_property(self, val):
         if type(val) is type(self):
             val._flush_to_cache()
             self._last.name = None
@@ -57,7 +57,7 @@ class BasePyUnion(PyBase):
 
         if (type(val) in [str, bytearray] and len(val) >= len(self)):
             tmp = type(self)(val)
-            self.val = tmp
+            self._val_property = tmp
             return
 
         raise ValueError(val)

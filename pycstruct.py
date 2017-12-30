@@ -42,7 +42,7 @@ class BasePyStruct(PyBase):
         if not name in self._cache:
             self._cache[name] = cls(self._buf, self._index + off)
 
-        self._cache[name].val = val
+        self._cache[name]._val_property = val
 
     def _get_field(self, name, cls, off):
         if not name in self._fields:
@@ -51,14 +51,14 @@ class BasePyStruct(PyBase):
         if not name in self._cache:
             self._cache[name] = cls(self._buf, self._index + off)
 
-        return self._cache[name].val
+        return self._cache[name]._val_property
 
     @property
-    def val(self):
+    def _val_property(self):
         return self
 
-    @val.setter
-    def val(self, val):
+    @_val_property.setter
+    def _val_property(self, val):
         if type(val) is type(self):
             for field in self._fields:
                 setattr(self, field, getattr(val, field))
@@ -66,7 +66,7 @@ class BasePyStruct(PyBase):
 
         if (type(val) in [str, bytearray] and len(val) >= len(self)):
             tmp = type(self)(val)
-            self.val = tmp
+            self._val_property = tmp
             return
 
         raise ValueError(val)

@@ -9,11 +9,11 @@ class PyBase(object):
         self._index = index
     
     @property
-    def val(self):
+    def _val_property(self):
         raise NotImplemented()
 
-    @val.setter
-    def val(self, val):
+    @_val_property.setter
+    def _val_property(self, val):
         raise NotImplemented()
 
     def flush(self):
