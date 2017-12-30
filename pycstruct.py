@@ -42,10 +42,13 @@ class MetaPyStruct(type):
         return cls.size
 
 class BasePyStruct(PyBase):
-    def __init__(self, buf=None, index=0):
+    def __init__(self, buf=None, index=0, **kwargs):
         super(BasePyStruct, self).__init__(buf, index)
 
         self._cache = {}
+
+        if kwargs:
+            self._val_property = kwargs
 
     def _set_field(self, val, name, cls, off):
         if not name in self._fields:
@@ -74,6 +77,12 @@ class BasePyStruct(PyBase):
         if type(val) is type(self):
             for field in self._fields:
                 setattr(self, field, getattr(val, field))
+            return
+
+        if isinstance(val, dict):
+            for k, v in val.items():
+                setattr(self, k, v)
+
             return
 
         if (type(val) in [str, bytearray] and len(val) >= len(self)):

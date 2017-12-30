@@ -3,12 +3,17 @@ from pycstruct import *
 from basics import *
 
 class BasePyArray(PyBase):
-    def __init__(self, buf=None, index=0):
+    def __init__(self, buf=None, index=0, *args, **kwargs):
         super(BasePyArray, self).__init__(buf, index)
         if self._buf is not None and self._count is None:
             assert len(self._buf) % len(self._type) == 0, "buf len must be multiple of %d" % len(self._type)
         self._cache = {}
-    
+
+        if args:
+            self._val_property = args
+        if kwargs:
+            self._val_property = kwargs
+
     def __getitem__(self, key):
         if type(key) is slice:
             start, stop, step = key.start, key.stop, key.step
@@ -58,7 +63,7 @@ class BasePyArray(PyBase):
             if stop is None:
                 stop = self._count if not self._count is None else 0xffffffffffffffffffff
             try:
-                if issubclass(type(val), BasePyArray) or type(val) in [list, tuple, set]:
+                if hasattr(val, "__iter__"):
                     for i, j in enumerate(xrange(start, stop, step)):
                         self[j] = val[i]
                 else:
@@ -109,7 +114,13 @@ class BasePyArray(PyBase):
 
     @_val_property.setter
     def _val_property(self, val):
-        if issubclass(type(val), BasePyArray) or type(val) in [list, tuple, set]:
+        if isinstance(val, dict):
+            for k, v in val.items():
+                self[k] = v
+
+            return
+
+        if hasattr(val, "__iter__"):
             for i, item in enumerate(val):
                 self[i] = item
             return

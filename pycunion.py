@@ -3,14 +3,19 @@ from pycstruct import *
 from basics import *
 
 class BasePyUnion(PyBase):
-    def __init__(self, buf=None, index=0):
+    def __init__(self, buf=None, index=0, **kwargs):
         super(BasePyUnion, self).__init__(buf, index)
+        
         self._cache = bytearray("\x00" * len(self))
         if self._buf:
             self._cache[0:len(self)] = self._buf[self._index:self._index + len(self)]
+        
         self._last = type("\x01", (object,), {})()
         self._last.name = None
         self._last.value = None
+
+        if kwargs:
+            self._val_property = kwargs
 
     def _flush_to_cache(self):
         if self._last.name:
@@ -53,6 +58,13 @@ class BasePyUnion(PyBase):
             val._flush_to_cache()
             self._last.name = None
             self._cache[0:] = val._cache
+            return
+
+        
+        if isinstance(val, dict):
+            for k, v in val.items():
+                setattr(self, k, v)
+
             return
 
         if (type(val) in [str, bytearray] and len(val) >= len(self)):
