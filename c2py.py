@@ -23,23 +23,28 @@ names_to_pycstructs[('double', )] = py_float64_t
 names_to_pycstructs[('long', 'double', )] = py_float64_t
 
 names_to_pycstructs[('long', 'long', )] = py_int64_t
+names_to_pycstructs[('long', 'int', )] = py_int64_t
 names_to_pycstructs[('long', )] = py_int64_t
 names_to_pycstructs[('int', )] = py_int32_t
 names_to_pycstructs[('short', )] = py_int16_t
 names_to_pycstructs[('byte', )] = py_int8_t
 names_to_pycstructs[('char', )] = py_int8_t
 names_to_pycstructs[('signed', 'long', 'long', )] = py_int64_t
+names_to_pycstructs[('signed', 'long', 'int', )] = py_int64_t
+names_to_pycstructs[('long', 'signed', 'int', )] = py_int64_t
 names_to_pycstructs[('signed', 'long', )] = py_int64_t
 names_to_pycstructs[('signed', 'int', )] = py_int32_t
 names_to_pycstructs[('signed', 'short', )] = py_int16_t
 names_to_pycstructs[('signed', 'byte', )] = py_int8_t
 names_to_pycstructs[('signed', 'char', )] = py_int8_t
-names_to_pycstructs[('unsigned', 'long', 'long', )] = py_int64_t
-names_to_pycstructs[('unsigned', 'long', )] = py_int64_t
-names_to_pycstructs[('unsigned', 'int', )] = py_int32_t
-names_to_pycstructs[('unsigned', 'short', )] = py_int16_t
-names_to_pycstructs[('unsigned', 'byte', )] = py_int8_t
-names_to_pycstructs[('unsigned', 'char', )] = py_int8_t
+names_to_pycstructs[('unsigned', 'long', 'long', )] = py_uint64_t
+names_to_pycstructs[('unsigned', 'long', 'int', )] = py_uint64_t
+names_to_pycstructs[('long', 'unsigned', 'int', )] = py_uint64_t
+names_to_pycstructs[('unsigned', 'long', )] = py_uint64_t
+names_to_pycstructs[('unsigned', 'int', )] = py_uint32_t
+names_to_pycstructs[('unsigned', 'short', )] = py_uint16_t
+names_to_pycstructs[('unsigned', 'byte', )] = py_uint8_t
+names_to_pycstructs[('unsigned', 'char', )] = py_uint8_t
 
 sizeof = len
 
