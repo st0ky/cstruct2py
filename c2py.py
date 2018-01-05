@@ -18,6 +18,9 @@ names_to_pycstructs[('int32_t', )] = py_int32_t
 names_to_pycstructs[('int16_t', )] = py_int16_t
 names_to_pycstructs[('int8_t', )] = py_int8_t
 
+names_to_pycstructs[('float', )] = py_float32_t
+names_to_pycstructs[('double', )] = py_float64_t
+
 names_to_pycstructs[('long', 'long', )] = py_int64_t
 names_to_pycstructs[('long', )] = py_int64_t
 names_to_pycstructs[('int', )] = py_int32_t
@@ -154,6 +157,12 @@ def decl_handler(node):
     if node.name is None:
         return parse_node(node.type)
 
+    if node.storage == ['extern']:
+        return None
+
+    node.show()
+    import IPython
+    IPython.embed()
     assert False, "Unknown Decl %s" % type(node)
 
 def parse_node(node):

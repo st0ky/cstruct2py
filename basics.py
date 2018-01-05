@@ -108,3 +108,13 @@ class py_int8_t:
     __metaclass__ = MetaPyBasic
     _pattern = "b"        
     _alignment = 1
+
+class py_float32_t:
+    __metaclass__ = MetaPyBasic
+    _pattern = "f"        
+    _alignment = 4
+
+class py_float64_t:
+    __metaclass__ = MetaPyBasic
+    _pattern = "d"        
+    _alignment = 4
