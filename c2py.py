@@ -20,6 +20,7 @@ names_to_pycstructs[('int8_t', )] = py_int8_t
 
 names_to_pycstructs[('float', )] = py_float32_t
 names_to_pycstructs[('double', )] = py_float64_t
+names_to_pycstructs[('long', 'double', )] = py_float64_t
 
 names_to_pycstructs[('long', 'long', )] = py_int64_t
 names_to_pycstructs[('long', )] = py_int64_t
