@@ -160,16 +160,11 @@ def ptr_handler(node):
 
 def decl_handler(node):
     assert type(node) is pycparser.c_ast.Decl
-    if node.name is None:
-        return parse_node(node.type)
+    return parse_node(node.type)
 
-    if node.storage == ['extern']:
-        return None
-
-    node.show()
-    import IPython
-    IPython.embed()
-    assert False, "Unknown Decl %s" % type(node)
+def func_decl_handler(node):
+    assert type(node) is pycparser.c_ast.FuncDecl
+    return
 
 def parse_node(node):
     if node is None:
@@ -201,6 +196,9 @@ def parse_node(node):
 
     if type(node) is pycparser.c_ast.Decl:
         return decl_handler(node)
+
+    if type(node) is pycparser.c_ast.FuncDecl:
+        return func_decl_handler(node)
 
     if type(node) == pycparser.c_ast.Constant:
         return constant_handler(node)
