@@ -166,6 +166,10 @@ def func_decl_handler(node):
     assert type(node) is pycparser.c_ast.FuncDecl
     return
 
+def func_def_handler(node):
+    assert type(node) is pycparser.c_ast.FuncDef
+    return
+
 def parse_node(node):
     if node is None:
         return node
@@ -199,6 +203,9 @@ def parse_node(node):
 
     if type(node) is pycparser.c_ast.FuncDecl:
         return func_decl_handler(node)
+
+    if type(node) is pycparser.c_ast.FuncDef:
+        return func_def_handler(node)
 
     if type(node) == pycparser.c_ast.Constant:
         return constant_handler(node)
