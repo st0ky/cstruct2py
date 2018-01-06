@@ -55,6 +55,8 @@ class BasePyBasic(PyBase):
     @_val_property.setter
     def _val_property(self, val):
         if type(val) in [int, long]:
+            if hasattr(self, "_max"):
+                assert self._min <= val <= self._max, "value must be between 0x%X to 0x%X" % (self._min, self._max)
             self._cache = val
             return
         
@@ -73,41 +75,57 @@ class py_uint64_t:
     __metaclass__ = MetaPyBasic
     _pattern = "Q"
     _alignment = 8
+    _max = (1 << 64) - 1
+    _min = 0
 
 class py_uint32_t:
     __metaclass__ = MetaPyBasic
     _pattern = "I"        
     _alignment = 4
+    _max = (1 << 32) - 1
+    _min = 0
 
 class py_uint16_t:
     __metaclass__ = MetaPyBasic
     _pattern = "H"        
     _alignment = 2
+    _max = (1 << 16) - 1
+    _min = 0
 
 class py_uint8_t:
     __metaclass__ = MetaPyBasic
     _pattern = "B"
     _alignment = 1
+    _max = (1 << 8) - 1
+    _min = 0
 
 class py_int64_t:
     __metaclass__ = MetaPyBasic
     _pattern = "q"        
     _alignment = 8
+    _max = (1 << 63) - 1
+    _min = -(1 << 63)
 
 class py_int32_t:
     __metaclass__ = MetaPyBasic
     _pattern = "i"        
     _alignment = 4
+    _max = (1 << 31) - 1
+    _min = -(1 << 31)
 
 class py_int16_t:
     __metaclass__ = MetaPyBasic
     _pattern = "h"        
     _alignment = 2
+    _max = (1 << 15) - 1
+    _min = -(1 << 15)
 
 class py_int8_t:
     __metaclass__ = MetaPyBasic
     _pattern = "b"        
     _alignment = 1
+    _max = (1 << 7) - 1
+    _min = -(1 << 7)
 
 class py_float32_t:
     __metaclass__ = MetaPyBasic
