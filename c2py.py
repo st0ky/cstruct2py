@@ -46,6 +46,9 @@ names_to_pycstructs[('unsigned', 'short', )] = py_uint16_t
 names_to_pycstructs[('unsigned', 'byte', )] = py_uint8_t
 names_to_pycstructs[('unsigned', 'char', )] = py_uint8_t
 
+lookup_names = {}
+
+
 sizeof = len
 
 
@@ -75,49 +78,70 @@ def _field_handler(node):
 def struct_handler(node):
     global names_to_pycstructs
     assert type(node) == pycparser.c_ast.Struct
-    name = node.name
-    if not node.decls:
-        return names_to_pycstructs[(name, )]
 
     fields = []
-    for decl in node.decls:
-        field_name, field_type = _field_handler(decl)
-        fields.append((field_name, field_type))
+    name = node.name
+    
+    if not node.decls:
+        if (name, ) in names_to_pycstructs:
+            return names_to_pycstructs[(name, )]
+        else:
+            fields = None
+
+    
+    if fields is not None:
+        for decl in node.decls:
+            field_name, field_type = _field_handler(decl)
+            fields.append((field_name, field_type))
 
     global structs_num
     structs_num += 1
     if name == None:
         name = "struct_num_%d" % structs_num
 
-    val = MetaPyStruct(name, (), {"_fields" : fields})
-    val.__module__ = val.__module__.replace("pycstruct", "c2py")
-    names_to_pycstructs[name] = val
-    names_to_pycstructs[(name, )] = val
-    exec(global_assignment % {"name" : name, "var" : "val"})
+    if (name, ) in names_to_pycstructs:
+        val = names_to_pycstructs[(name, )]
+        MetaPyStruct.assign_fields(val, fields)
+    else:
+        val = MetaPyStruct(name, (), {"_fields" : fields})
+        val.__module__ = __name__
+        names_to_pycstructs[name] = val
+        names_to_pycstructs[(name, )] = val
+        exec(global_assignment % {"name" : name, "var" : "val"})
     return val
 
 def union_handler(node):
     global names_to_pycstructs
     assert type(node) == pycparser.c_ast.Union
-    name = node.name
-    if not node.decls:
-        return names_to_pycstructs[(name, )]
-
+    
     fields = []
-    for decl in node.decls:
-        field_name, field_type = _field_handler(decl)
-        fields.append((field_name, field_type))
+    name = node.name
+    
+    if not node.decls:
+        if (name, ) in names_to_pycstructs:
+            return names_to_pycstructs[(name, )]
+        else:
+            fields = None
+
+    if fields is not None:
+        for decl in node.decls:
+            field_name, field_type = _field_handler(decl)
+            fields.append((field_name, field_type))
 
     global unions_num
     unions_num += 1
     if name == None:
         name = "unions_num_%d" % unions_num
 
-    val = MetaPyUnion(name, (), {"_fields" : fields})
-    val.__module__ = val.__module__.replace("pycunion", "c2py")
-    names_to_pycstructs[name] = val
-    names_to_pycstructs[(name, )] = val
-    exec(global_assignment % {"name" : name, "var" : "val"})
+    if (name, ) in names_to_pycstructs:
+        val = names_to_pycstructs[(name, )]
+        MetaPyUnion.assign_fields(val, fields)
+    else:
+        val = MetaPyUnion(name, (), {"_fields" : fields})
+        val.__module__ = __name__
+        names_to_pycstructs[name] = val
+        names_to_pycstructs[(name, )] = val
+        exec(global_assignment % {"name" : name, "var" : "val"})
     return val
 
 def array_handler(node):
@@ -128,7 +152,7 @@ def array_handler(node):
     global arrays_num
     arrays_num += 1
     val = MetaPyArray("array_num_%d" % arrays_num, (), {"_type" : typ, "_count" : num})
-    val.__module__ = val.__module__.replace("pycarray", "c2py")
+    val.__module__ = __name__
     return val
 
 

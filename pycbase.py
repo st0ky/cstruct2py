@@ -1,5 +1,8 @@
 class PyBase(object):
     def __init__(self, buf=None, index=0):
+        if hasattr(type(self), "incomplete type"):
+            raise ValueError(getattr(self, "incomplete type"))
+        
         super(PyBase, self).__init__()
 
         if buf:

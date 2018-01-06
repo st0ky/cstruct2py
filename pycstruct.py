@@ -8,35 +8,60 @@ pad = lambda x, y: x + ((-x) % y)
 class MetaPyStruct(type):
     def __init__(cls, cls_name, bases, d):
         super(MetaPyStruct, cls).__init__(cls_name, (BasePyStruct,) + bases, d)
+        if not hasattr(cls, "incomplete type"):
+            cls.assign_fields(cls._fields)
 
     def __new__(cls, cls_name, bases, d):
         assert "_fields" in d
-        assert type(d["_fields"]) in [list, tuple, dict]
-        if type(d["_fields"]) is dict:
-            d["_fields"] = d["_fields"].items()
+        if d["_fields"] is None:
+            d["incomplete type"] = True
+
+        d["_unnameds"] = []
+
+        return type.__new__(cls, cls_name, (BasePyStruct,) + bases, d)
+
+    def assign_fields(cls, fields):
+        assert type(fields) in [list, tuple, dict]
+        if type(fields) is dict:
+            fields = fields.items()
 
         off = 0
         _alignment = 1
-        for (name, field_cls) in d["_fields"]:
-            assert type(name) is str, name
+        unnamed_count = 0
+        names = []
+        for (name, field_cls) in fields:
             assert issubclass(field_cls, PyBase), field_cls
-
-            if field_cls._alignment > _alignment:
-                _alignment = field_cls._alignment
+            
+            _alignment = max(field_cls._alignment, _alignment)
 
             off = pad(off, field_cls._alignment)
+            
+            if name is None:
+                unnamed = "unnamed %d" % unnamed_count
+                unnamed_count += 1
+                for field in field_cls._fields:
+                    names.append(field)
+                    setattr(cls, field, property(
+                        partial(BasePyStruct._get_field, name=field, cls=field_cls, off=off, unnamed=unnamed),
+                        partial(BasePyStruct._set_field, name=field, cls=field_cls, off=off, unnamed=unnamed)
+                        ))
+            else:
+                assert type(name) is str, name
 
-            d[name] = property(
-                partial(BasePyStruct._get_field, name=name, cls=field_cls, off=off),
-                partial(BasePyStruct._set_field, name=name, cls=field_cls, off=off)
-                )
+                names.append(name)
+                setattr(cls, name, property(
+                    partial(BasePyStruct._get_field, name=name, cls=field_cls, off=off),
+                    partial(BasePyStruct._set_field, name=name, cls=field_cls, off=off)
+                    ))
+            
             off += len(field_cls)
 
-        d["size"] = pad(off, _alignment)
-        d["_alignment"] = _alignment
-        d["_fields"] = [name for (name, field_cls) in d["_fields"]]
+        cls.size = pad(off, _alignment)
+        cls._alignment = _alignment
+        cls._fields = names
 
-        return type.__new__(cls, cls_name, (BasePyStruct,) + bases, d)
+        if hasattr(cls, "incomplete type"):
+            delattr(cls, "incomplete type")
 
     def __len__(cls):
         return cls.size
@@ -50,23 +75,33 @@ class BasePyStruct(PyBase):
         if kwargs:
             self._val_property = kwargs
 
-    def _set_field(self, val, name, cls, off):
+    def _set_field(self, val, name, cls, off, unnamed=None):
+        real_name = name if unnamed is None else unnamed
+        
         if not name in self._fields:
             raise KeyError(name)
 
-        if not name in self._cache:
-            self._cache[name] = cls(self._buf, self._index + off)
+        if not real_name in self._cache:
+            self._cache[real_name] = cls(self._buf, self._index + off)
 
-        self._cache[name]._val_property = val
+        if unnamed is not None:
+            return setattr(self._cache[real_name], name, val)
 
-    def _get_field(self, name, cls, off):
+        self._cache[real_name]._val_property = val
+
+    def _get_field(self, name, cls, off, unnamed=None):
+        real_name = name if unnamed is None else unnamed
+        
         if not name in self._fields:
             raise KeyError(name)
 
-        if not name in self._cache:
-            self._cache[name] = cls(self._buf, self._index + off)
+        if not real_name in self._cache:
+            self._cache[real_name] = cls(self._buf, self._index + off)
 
-        return self._cache[name]._val_property
+        if unnamed is not None:
+            return getattr(self._cache[real_name], name)
+
+        return self._cache[real_name]._val_property
 
     @property
     def _val_property(self):
@@ -117,6 +152,7 @@ class BasePyStruct(PyBase):
         return "dict(%s)" % res
 
     def _to_repr(self):
+        print self._fields
         res = ", ".join("%s=%s" % (field, getattr(self, field)) for field in self._fields)
         data = super(BasePyStruct, self)._to_repr()
         if data:

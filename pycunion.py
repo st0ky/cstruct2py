@@ -22,30 +22,40 @@ class BasePyUnion(PyBase):
             self._last.value.pack_into(self._cache, 0)
             self._last.name = None
 
-    def _set_field(self, val, name, cls):
+    def _set_field(self, val, name, cls, unnamed=None):
         if not name in self._fields:
             raise KeyError(name)
 
-        if self._last.name == name:
+        real_name = name if unnamed is None else unnamed
+        if self._last.name == real_name:
+            if unnamed is not None:
+                return setattr(self._last.value, name, val)
             self._last.value._val_property = val
             return
         
         self._flush_to_cache()
-        self._last.name = name
+        self._last.name = real_name
         self._last.value = cls(self._cache, 0)
+        if unnamed is not None:
+            return setattr(self._last.value, name, val)
         self._last.value._val_property = val
 
-    def _get_field(self, name, cls):
+    def _get_field(self, name, cls, unnamed=None):
         if not name in self._fields:
             raise KeyError(name)
 
-        if self._last.name == name:
+        real_name = name if unnamed is None else unnamed
+        if self._last.name == real_name:
+            if unnamed is not None:
+                return getattr(self._last.value, name)
             return self._last.value._val_property
 
         self._flush_to_cache()
-        self._last.name = name
+        self._last.name = real_name
         self._last.value = cls(self._cache, 0)
 
+        if unnamed is not None:
+            return getattr(self._last.value, name)
         return self._last.value._val_property
 
     @property
@@ -101,34 +111,56 @@ class BasePyUnion(PyBase):
 class MetaPyUnion(type):
     def __init__(cls, cls_name, bases, d):
         super(MetaPyUnion, cls).__init__(cls_name, (BasePyUnion,) + bases, d)
+        if not hasattr(cls, "incomplete type"):
+            cls.assign_fields(cls._fields)
 
     def __new__(cls, cls_name, bases, d):
         assert "_fields" in d
-        assert type(d["_fields"]) in [list, tuple, dict]
-        if type(d["_fields"]) is dict:
-            d["_fields"] = d["_fields"].items()
+        if d["_fields"] is None:
+            d["incomplete type"] = True
+
+        return type.__new__(cls, cls_name, (BasePyUnion,) + bases, d)
+
+    def assign_fields(cls, fields):
+        assert type(fields) in [list, tuple, dict]
+        if type(fields) is dict:
+            fields = fields.items()
 
         size = 0
         _alignment = 1
         
-        for (name, field_cls) in d["_fields"]:
-            assert type(name) is str, name
+        unnamed_count = 0
+        names = []
+        for (name, field_cls) in fields:
             assert issubclass(field_cls, PyBase), field_cls
             
-            if field_cls._alignment > _alignment:
-                _alignment = field_cls._alignment
+            _alignment = max(field_cls._alignment, _alignment)
 
-            d[name] = property(
-                partial(BasePyUnion._get_field, name=name, cls=field_cls),
-                partial(BasePyUnion._set_field, name=name, cls=field_cls)
-                )
+            if name is None:
+                unnamed = "unnamed %d" % unnamed_count
+                unnamed_count += 1
+                for field in field_cls._fields:
+                    names.append(field)
+                    setattr(cls, field, property(
+                        partial(BasePyStruct._get_field, name=field, cls=field_cls, unnamed=unnamed),
+                        partial(BasePyStruct._set_field, name=field, cls=field_cls, unnamed=unnamed)
+                        ))
+            else:
+                assert type(name) is str, name
+                names.append(name)
+                setattr(cls, name, property(
+                    partial(BasePyUnion._get_field, name=name, cls=field_cls),
+                    partial(BasePyUnion._set_field, name=name, cls=field_cls)
+                    ))
             size = max(size, len(field_cls))
 
-        d["size"] = size
-        d["_alignment"] = _alignment
-        d["_fields"] = [name for (name, field_cls) in d["_fields"]]
+        cls.size = size
+        cls._alignment = _alignment
+        cls._fields = names
 
-        return type.__new__(cls, cls_name, (BasePyUnion,) + bases, d)
+        if hasattr(cls, "incomplete type"):
+            delattr(cls, "incomplete type")
+
 
     def __len__(cls):
         return cls.size
