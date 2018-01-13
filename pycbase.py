@@ -45,6 +45,6 @@ class PyBase(object):
 
     def _to_repr(self):
         if self._buf:
-            return repr(self._buf[self._index:self._index + self.size])
+            return repr(self._buf[self._index:self._index + self.size]) 
 
         return ""

@@ -17,6 +17,20 @@ class MetaPyBasic(type):
     def __len__(cls):
         return cls.size
 
+class _IntRapper(int):
+    def __repr__(self):
+        return hex(self)
+
+    def __str__(self):
+        return hex(self)
+
+class _CharRapper(int):
+    def __repr__(self):
+        return repr(chr(int(self) & 0xFF))
+
+    def __str__(self):
+        return repr(chr(self & 0xFF))
+
 class BasePyBasic(PyBase):
     def __init__(self, buf=None, index=0):
 
@@ -70,6 +84,27 @@ class BasePyBasic(PyBase):
 
         raise ValueError(val)
 
+    def __str__(self):
+        return str(self._val_property)
+
+    def _to_repr(self):
+        res = repr(self._val_property)
+        data = super(BasePyBasic, self)._to_repr()
+        if data:
+            res = ", ".join([data, res])
+        return res
+
+    @property
+    def _cache(self):
+        return self.__cache
+
+    @_cache.setter
+    def _cache(self, val):
+        if val is None:
+            self.__cache = None
+        else:
+            self.__cache = _IntRapper(val)
+
 
 class py_uint64_t:
     __metaclass__ = MetaPyBasic
@@ -99,6 +134,24 @@ class py_uint8_t:
     _max = (1 << 8) - 1
     _min = 0
 
+class py_uchar_t:
+    __metaclass__ = MetaPyBasic
+    _pattern = "B"
+    _alignment = 1
+    _max = (1 << 8) - 1
+    _min = 0
+
+    @property
+    def _cache(self):
+        return self.__cache
+
+    @_cache.setter
+    def _cache(self, val):
+        if val is None:
+            self.__cache = None
+        else:
+            self.__cache = _CharRapper(val)
+
 class py_int64_t:
     __metaclass__ = MetaPyBasic
     _pattern = "q"        
@@ -126,6 +179,24 @@ class py_int8_t:
     _alignment = 1
     _max = (1 << 7) - 1
     _min = -(1 << 7)
+
+class py_char_t:
+    __metaclass__ = MetaPyBasic
+    _pattern = "b"        
+    _alignment = 1
+    _max = (1 << 7) - 1
+    _min = -(1 << 7)
+
+    @property
+    def _cache(self):
+        return self.__cache
+
+    @_cache.setter
+    def _cache(self, val):
+        if val is None:
+            self.__cache = None
+        else:
+            self.__cache = _CharRapper(val)
 
 class py_float32_t:
     __metaclass__ = MetaPyBasic
