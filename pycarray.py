@@ -14,6 +14,14 @@ class BasePyArray(PyBase):
         if kwargs:
             self._val_property = kwargs
 
+    @staticmethod
+    def is_iterable(val):
+        try:
+            iter(val)
+            return True 
+        except Exception:
+            return False
+
     def __getitem__(self, key):
         if type(key) is slice:
             start, stop, step = key.start, key.stop, key.step
@@ -63,7 +71,7 @@ class BasePyArray(PyBase):
             if stop is None:
                 stop = self._count if not self._count is None else 0xffffffffffffffffffff
             try:
-                if hasattr(val, "__iter__"):
+                if BasePyArray.is_iterable(val):
                     for i, j in enumerate(xrange(start, stop, step)):
                         self[j] = val[i]
                 else:
@@ -120,7 +128,7 @@ class BasePyArray(PyBase):
 
             return
 
-        if hasattr(val, "__iter__"):
+        if BasePyArray.is_iterable(val):
             for i, item in enumerate(val):
                 self[i] = item
             return
