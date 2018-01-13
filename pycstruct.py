@@ -16,8 +16,6 @@ class MetaPyStruct(type):
         if d["_fields"] is None:
             d["incomplete type"] = True
 
-        d["_unnameds"] = []
-
         return type.__new__(cls, cls_name, (BasePyStruct,) + bases, d)
 
     def assign_fields(cls, fields):
