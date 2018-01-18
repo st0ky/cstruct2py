@@ -15,16 +15,46 @@ get_dir = lambda x: os.path.dirname(os.path.abspath(x))
 
 class Parser(object):
     """A class for parsing C headres to python structs. It saves the context and configuration"""
-    def __init__(self, conf=gcc_x86_64_le):
+    def __init__(self, conf=gcc_x86_64_le, debuglevel=0):
         super(Parser, self).__init__()
         self.conf = conf
+        self.debuglevel = debuglevel
 
-        self.basics = conf.get_basics()
+        self.basics = conf.basics
         self.names_to_pycstructs = {}
 
         self.structs_num = 0
         self.unions_num = 0
         self.arrays_num = 0
+        self.cdata = ""
+
+
+        funcs = {}
+        funcs[pycparser.c_ast.IdentifierType]    = self.type_handler
+        funcs[pycparser.c_ast.IdentifierType]    = self.type_handler
+        funcs[pycparser.c_ast.Struct]            = self.struct_handler
+        funcs[pycparser.c_ast.Union]             = self.union_handler
+        funcs[pycparser.c_ast.ArrayDecl]         = self.array_handler
+        funcs[pycparser.c_ast.PtrDecl]           = self.ptr_handler
+        funcs[pycparser.c_ast.Typedef]           = self.typedef_handler
+        funcs[pycparser.c_ast.Typename]          = self.typename_handler
+        funcs[pycparser.c_ast.TypeDecl]          = self.typedecl_handler
+        funcs[pycparser.c_ast.Decl]              = self.decl_handler
+        funcs[pycparser.c_ast.FuncDecl]          = self.func_decl_handler
+        funcs[pycparser.c_ast.FuncDef]           = self.func_def_handler
+        funcs[pycparser.c_ast.Constant]          = self.constant_handler
+        funcs[pycparser.c_ast.BinaryOp]          = self.binary_op_handler
+        funcs[pycparser.c_ast.UnaryOp]           = self.unary_op_handler
+        self.funcs = funcs
+
+        self.flush()
+
+    def flush(self):
+        self.pre = pcpp.Preprocessor()
+        self.pre.line_directive = None
+
+        self.cparse = CParser()
+
 
     def has_type(self, val):
         return val in self.basics or val in self.names_to_pycstructs
@@ -178,73 +208,57 @@ class Parser(object):
         if node is None:
             return node
 
-        funcs = {}
-        funcs[pycparser.c_ast.IdentifierType]    = self.type_handler
-        funcs[pycparser.c_ast.IdentifierType]    = self.type_handler
-        funcs[pycparser.c_ast.Struct]            = self.struct_handler
-        funcs[pycparser.c_ast.Union]             = self.union_handler
-        funcs[pycparser.c_ast.ArrayDecl]         = self.array_handler
-        funcs[pycparser.c_ast.PtrDecl]           = self.ptr_handler
-        funcs[pycparser.c_ast.Typedef]           = self.typedef_handler
-        funcs[pycparser.c_ast.Typename]          = self.typename_handler
-        funcs[pycparser.c_ast.TypeDecl]          = self.typedecl_handler
-        funcs[pycparser.c_ast.Decl]              = self.decl_handler
-        funcs[pycparser.c_ast.FuncDecl]          = self.func_decl_handler
-        funcs[pycparser.c_ast.FuncDef]           = self.func_def_handler
-        funcs[pycparser.c_ast.Constant]          = self.constant_handler
-        funcs[pycparser.c_ast.BinaryOp]          = self.binary_op_handler
-        funcs[pycparser.c_ast.UnaryOp]           = self.unary_op_handler
-        
-        if type(node) in funcs:
-            return funcs[type(node)](node)
+        if type(node) in self.funcs:
+            return self.funcs[type(node)](node)
 
         
         assert 0, "Unknown handler for type: %s" % repr(type(node))
 
-    def parse_string(self, data, file_name="<unknown>", include_dirs=[get_dir(__file__)], save_tmp=False, debuglevel=0):
-        pre = pcpp.Preprocessor()
-        pre.line_directive = None
+    def parse_string(self, data, file_name="<unknown>", include_dirs=[get_dir(__file__)], debuglevel=None):
+        if debuglevel is None:
+            debuglevel = self.debuglevel
+
         for i in include_dirs:
-            pre.add_path(i)
-        pre.parse(data)
+            self.pre.add_path(i)
+        self.pre.parse(data)
         buff = cStringIO.StringIO()
-        pre.write(buff)
+        self.pre.write(buff)
         processed = buff.getvalue()
-        if save_tmp:
-            tmp_path = os.path.abspath(file_name) + ".tmp"
-            if debuglevel:
-                print "Creating tmp file: %s" % tmp_path
-            with open(tmp_path, "wb") as f:
-                f.write(processed)
 
-        for macro_name, macro in pre.macros.items():
+        not_found = [line for line in processed.splitlines() if "#include" in line]
+        if not_found:
+            print "There is unresolved includes:"
+            for line in not_found:
+                print line
+
+        assert "#include " not in processed
+
+
+        for macro_name, macro in self.pre.macros.items():
             if not macro.arglist:
-                self.names_to_pycstructs[macro_name] = pre.evalexpr(macro.value, get_strings=True)
+                self.names_to_pycstructs[macro_name] = self.pre.evalexpr(macro.value, get_strings=True)
 
-        cparse = CParser()
-        contents = cparse.parse(processed, file_name)
+        
+        contents = self.cparse.parse(processed, file_name)
 
         for ex in contents.ext:
             if debuglevel:
                 ex.show()
             self.parse_node(ex)
 
-        if save_tmp:
-            os.unlink(tmp_path)
-
-    def parse_file(self, file_path, include_dirs=None, save_tmp=False, debuglevel=0):
+    def parse_file(self, file_path, include_dirs=None, debuglevel=None):
         if include_dirs is None:
             include_dirs = [get_dir(__file__), get_dir(file_path)]
 
         with open(file_path, "rb") as f:
             data = f.read()
 
-        self.parse_string(data, file_path, include_dirs, save_tmp, debuglevel)
+        self.parse_string(data, file_path, include_dirs, debuglevel)
 
     def update_globals(self, g):
         """Enters the new classes to globals.
            You should call that functions like that: p.update_globals(globals())
         """
-        g.update(**self.names_to_pycstructs)
+        g.update(self.names_to_pycstructs)
 
 
