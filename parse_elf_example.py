@@ -1,12 +1,15 @@
 import sys
+import os
+sys.path.append(os.path.abspath(os.curdir))
 import cstruct2py
-
-cstruct2py.c2py.parse_file("cstruct2py/example.h")
-from cstruct2py.c2py import *
 
 sizeof = len
 
 def main(file_path):
+
+    parser = cstruct2py.c2py.Parser()
+    parser.parse_file("cstruct2py/example.h")
+    parser.update_globals(globals())
 
     data = open(file_path, "rb").read()
 
@@ -107,4 +110,7 @@ def main(file_path):
 
 
 if __name__ == '__main__':
-    main()
+    if len(sys.argv) < 2:
+        print "Usage: %s <elf_path>" % sys.argv[0]
+    else:
+        main(sys.argv[1])
