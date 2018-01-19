@@ -3,4 +3,4 @@
 	url = https://github.com/eliben/pycparser.git
 [submodule "pcpp"]
 	path = pcpp
-	url = https://github.com/BinyaminBi/pcpp.git
+	url = https://github.com/st0ky/pcpp.git
