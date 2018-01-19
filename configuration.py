@@ -33,19 +33,13 @@ class Config(object):
             names_to_pycstructs['float%d_t' % i] = MetaPyBasic("float%d_t" % i, (),
                 dict(_pattern=self.byteorder + p, _alignment=i/8))
 
-        def _cache_setter(self, val):
-            if val is None:
-                self.__cache = None
-            else:
-                self.__cache = _CharRapper(val)
-
         names_to_pycstructs['char_t'] = MetaPyBasic("char_t", (),
                 dict(_pattern=self.byteorder + "b", _alignment=1, _max = (1 << (8 - 1)) - 1, _min=-(1 << (8 - 1)),
-                    _cache=property(lambda self: self.__cache, _cache_setter)))
+                    _val_wrapper=_CharRapper))
 
         names_to_pycstructs['uchar_t'] = MetaPyBasic("uchar_t", (),
                 dict(_pattern=self.byteorder + "B", _alignment=1, _max = (1 << 8) - 1, _min=0,
-                    _cache=property(lambda self: self.__cache, _cache_setter)))
+                    _val_wrapper=_CharRapper))
 
         for k, v in names_to_pycstructs.items():
             names_to_pycstructs[(k,)] = v

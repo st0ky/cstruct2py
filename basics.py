@@ -22,14 +22,14 @@ class _IntRapper(int):
         return hex(self)
 
     def __str__(self):
-        return hex(self)
+        return repr(self)
 
 class _CharRapper(int):
     def __repr__(self):
-        return repr(chr(int(self) & 0xFF))
+        return repr(chr(self & 0xFF))
 
     def __str__(self):
-        return repr(chr(self & 0xFF))
+        return repr(self)
 
 class BasePyBasic(PyBase):
     def __init__(self, buf=None, index=0):
@@ -94,6 +94,7 @@ class BasePyBasic(PyBase):
             res = ", ".join([data, res])
         return res
 
+    _val_wrapper = _IntRapper
     @property
     def _cache(self):
         return self.__cache
@@ -103,7 +104,7 @@ class BasePyBasic(PyBase):
         if val is None:
             self.__cache = None
         else:
-            self.__cache = _IntRapper(val)
+            self.__cache = self._val_wrapper(val)
 
 
 # class py_uint64_t:
@@ -141,17 +142,8 @@ class BasePyBasic(PyBase):
 #     _max = (1 << 8) - 1
 #     _min = 0
 
-#     @property
-#     def _cache(self):
-#         return self.__cache
-
-#     @_cache.setter
-#     def _cache(self, val):
-#         if val is None:
-#             self.__cache = None
-#         else:
-#             self.__cache = _CharRapper(val)
-
+#     _val_wrapper = _CharRapper
+    
 # class py_int64_t:
 #     __metaclass__ = MetaPyBasic
 #     _pattern = "q"        
