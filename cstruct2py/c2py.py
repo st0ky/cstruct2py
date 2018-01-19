@@ -68,6 +68,7 @@ class Parser(object):
         val = self.parse_node(node.type)
         self.names_to_pycstructs[name] = val
         self.names_to_pycstructs[(name, )] = val
+        return self.names_to_pycstructs[name]
 
     def _field_handler(self, node):
         assert type(node) is pycparser.c_ast.Decl
@@ -102,7 +103,7 @@ class Parser(object):
             MetaPyStruct.assign_fields(val, fields)
         else:
             val = MetaPyStruct(name, (), {"_fields" : fields})
-            val.__module__ = __name__
+            val.__module__ = None
             self.names_to_pycstructs[name] = val
             self.names_to_pycstructs[(name, )] = val
 
@@ -134,7 +135,7 @@ class Parser(object):
             MetaPyUnion.assign_fields(val, fields)
         else:
             val = MetaPyUnion(name, (), {"_fields" : fields})
-            val.__module__ = __name__
+            val.__module__ = None
             self.names_to_pycstructs[name] = val
             self.names_to_pycstructs[(name, )] = val
         
@@ -147,7 +148,7 @@ class Parser(object):
         assert num is None or type(num) in [long, int]
         self.arrays_num += 1
         val = MetaPyArray("array_num_%d" % self.arrays_num, (), {"_type" : typ, "_count" : num})
-        val.__module__ = __name__
+        val.__module__ = None
         return val
 
 
@@ -233,18 +234,19 @@ class Parser(object):
 
         assert "#include " not in processed
 
-
         for macro_name, macro in self.pre.macros.items():
             if not macro.arglist:
                 self.names_to_pycstructs[macro_name] = self.pre.evalexpr(macro.value, get_strings=True)
 
-        
         contents = self.cparse.parse(processed, file_name)
 
+        res = []
         for ex in contents.ext:
             if debuglevel:
                 ex.show()
-            self.parse_node(ex)
+            res.append(self.parse_node(ex))
+
+        return res
 
     def parse_file(self, file_path, include_dirs=None, debuglevel=None):
         if include_dirs is None:
@@ -253,7 +255,7 @@ class Parser(object):
         with open(file_path, "rb") as f:
             data = f.read()
 
-        self.parse_string(data, file_path, include_dirs, debuglevel)
+        return self.parse_string(data, file_path, include_dirs, debuglevel)
 
     def update_globals(self, g):
         """Enters the new classes to globals.
