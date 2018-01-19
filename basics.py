@@ -4,7 +4,7 @@ import struct
 class MetaPyBasic(type):
     "Basic value (just int ot char, etc.) no array or struct"
     def __init__(cls, cls_name, bases, d):
-        super(MetaPyBasic, cls).__init__(cls_name, (BasePyBasic,) + bases, d)
+        super(MetaPyBasic, cls).__init__(cls_name, (BasePyBasic,), d)
         
         assert "_alignment" in d
         assert "_pattern" in d
@@ -12,7 +12,7 @@ class MetaPyBasic(type):
         cls.size = cls._struct.size
     
     def __new__(cls, cls_name, bases, d):
-        return type.__new__(cls, cls_name, (BasePyBasic,) + bases, d)
+        return type.__new__(cls, cls_name, (BasePyBasic,), d)
 
     def __len__(cls):
         return cls.size

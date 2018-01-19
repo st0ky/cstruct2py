@@ -110,7 +110,7 @@ class BasePyUnion(PyBase):
 
 class MetaPyUnion(type):
     def __init__(cls, cls_name, bases, d):
-        super(MetaPyUnion, cls).__init__(cls_name, (BasePyUnion,) + bases, d)
+        super(MetaPyUnion, cls).__init__(cls_name, (BasePyUnion,), d)
         if not hasattr(cls, "incomplete type"):
             cls.assign_fields(cls._fields)
 
@@ -119,7 +119,7 @@ class MetaPyUnion(type):
         if d["_fields"] is None:
             d["incomplete type"] = True
 
-        return type.__new__(cls, cls_name, (BasePyUnion,) + bases, d)
+        return type.__new__(cls, cls_name, (BasePyUnion,), d)
 
     def assign_fields(cls, fields):
         assert type(fields) in [list, tuple, dict]
