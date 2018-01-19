@@ -84,6 +84,12 @@ class Config(object):
     def basics(self):
         return self.names_to_pycstructs
 
+    def __getattr__(self, name):
+        if name in ["names_to_pycstructs", "basics"] or name not in self.basics:
+            return __getattribute__(self, name)
+
+        return self.basics[name]
+
     def __setattr__(self, name, val):
         if hasattr(self, "names_to_pycstructs"):
             raise AttributeError("'%s' object attribute '%s' is read-only" % (type(self), name))
