@@ -1,1 +1,5 @@
 *.pyc
+
+lextab\.py
+
+yacctab\.py
