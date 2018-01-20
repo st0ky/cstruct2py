@@ -30,7 +30,12 @@ b = A(buf)
 print b
 c = A('aaaa11112222', 2)
 print c
+print repr(c)
 ```
 The output will be:
 ```
+{'x':0x2d, 'y':0x0}
+{'x':0x2d, 'y':0x0}
+{'x':0x31316161, 'y':0x32323131}
+A('aa111122', x=0x31316161, y=0x32323131)
 ```

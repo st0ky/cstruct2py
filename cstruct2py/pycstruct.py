@@ -146,8 +146,8 @@ class BasePyStruct(PyBase):
         return self
 
     def __str__(self):
-        res = ", ".join("%s=%s" % (field, getattr(self, field)) for field in self._fields)
-        return "dict(%s)" % res
+        res = ", ".join("%s:%s" % (repr(field), getattr(self, field)) for field in self._fields)
+        return "{%s}" % res
 
     def _to_repr(self):
         res = ", ".join("%s=%s" % (field, getattr(self, field)) for field in self._fields)

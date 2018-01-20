@@ -246,7 +246,7 @@ class Parser(object):
                 ex.show()
             res.append(self.parse_node(ex))
 
-        return res
+        return res[0] if len(res) == 1 else res
 
     def parse_file(self, file_path, include_dirs=None, debuglevel=None):
         if include_dirs is None:
