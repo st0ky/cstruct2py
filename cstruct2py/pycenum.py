@@ -56,13 +56,26 @@ class MetaPyEnum(MetaPyBasic):
     def __len__(cls):
         return cls.size
 
+    def __iter__(cls):
+        return iter(map(cls, cls._values.keys()))
+
+    def __contains__(cls, val):
+        if isinstance(val, PyBase):
+            val = val._val_property
+        return val in cls._values or val in cls._values.values()
+
 class BasePyEnum(object):
     def __init__(self, val=None, buf=None, index=0):
         super(BasePyEnum, self).__init__(buf, index)
 
         if val is not None:
             self._val_property = val
-        
+    
+    def __str__(self):
+        if self in type(self):
+            return self._values[self._val_property]
+
+        return str(self._val_property)
     
     def _to_repr(self):
         res = repr(self._val_property)
