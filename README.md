@@ -39,3 +39,9 @@ The output will be:
 {'x':0x31316161, 'y':0x32323131}
 A('aa111122', x=0x31316161, y=0x32323131)
 ```
+
+## Clone the project
+For clone this project run:
+```
+git clone https://github.com/st0ky/cstruct2py.git --recursive
+```
