@@ -1,10 +1,15 @@
 from .pycbase import PyBase
 from collections import OrderedDict
-from .basics import MetaPyBasic
+from .basics import MetaPyBasic, BasePyBasic
 
 
 
 class _EnumWrapper(int):
+    def __new__(cls, val=0, *args, **kargs):
+        if isinstance(val, str) and val in cls._values.values():
+            val = [k for k,v in cls._values.items() if v == val][0]
+        return int.__new__(cls, val, *args, **kargs)
+
     def __repr__(self):
         if self in self._values:
             return "<%s.%s: %s>" % (type(self).__name__, self._values[self], hex(self))
@@ -86,3 +91,13 @@ class BasePyEnum(object):
         if data:
             res = ", ".join([res, data])
         return res
+
+    @property
+    def _val_property(self):
+        return BasePyBasic._val_property.fget(self)
+
+    @_val_property.setter
+    def _val_property(self, val):
+        val = self._val_wrapper(val)
+        return BasePyBasic._val_property.fset(self, val)
+    

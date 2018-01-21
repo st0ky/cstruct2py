@@ -34,7 +34,7 @@ class _CharRapper(int):
 class BasePyBasic(PyBase):
     def __init__(self, buf=None, index=0):
 
-        if type(buf) in [int, long]:
+        if isinstance(buf, int) or isinstance(buf, long):
             super(BasePyBasic, self).__init__(None, 0)
             self._cache = buf
             return
@@ -68,7 +68,7 @@ class BasePyBasic(PyBase):
 
     @_val_property.setter
     def _val_property(self, val):
-        if type(val) in [int, long]:
+        if isinstance(val, int) or isinstance(val, long):
             if hasattr(self, "_max"):
                 assert self._min <= val <= self._max, "value must be between 0x%X to 0x%X" % (self._min, self._max)
             self._cache = val
