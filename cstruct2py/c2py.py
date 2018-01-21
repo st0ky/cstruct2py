@@ -89,6 +89,9 @@ class Parser(object):
         values = self.parse_node(node.values)
         val = MetaPyEnum(node.name, (), dict(_values=values), self.conf)
 
+        for item in val:
+            self.set_type(str(item), item)
+
         return self.set_type(node.name, val)
 
     def enumerator_handler(self, node):
@@ -260,7 +263,7 @@ class Parser(object):
 
         for macro_name, macro in self.pre.macros.items():
             if not macro.arglist:
-                self.names_to_pycstructs[macro_name] = self.pre.evalexpr(macro.value, get_strings=True)
+                self.set_type(macro_name, self.pre.evalexpr(macro.value, get_strings=True))
 
         contents = self.cparse.parse(processed, file_name)
 
