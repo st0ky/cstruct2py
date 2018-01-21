@@ -6,6 +6,7 @@ import pycparser
 from .pycstruct import MetaPyStruct
 from .pycunion import MetaPyUnion
 from .pycarray import MetaPyArray
+from .pycenum import MetaPyEnum
 from .configuration import gcc_x86_64_le
 
 
@@ -34,6 +35,9 @@ class Parser(object):
         funcs[pycparser.c_ast.IdentifierType]    = self.type_handler
         funcs[pycparser.c_ast.Struct]            = self.struct_handler
         funcs[pycparser.c_ast.Union]             = self.union_handler
+        funcs[pycparser.c_ast.Enum]              = self.enum_handler
+        funcs[pycparser.c_ast.EnumeratorList]    = self.enumerator_list_handler
+        funcs[pycparser.c_ast.Enumerator]        = self.enumerator_handler
         funcs[pycparser.c_ast.ArrayDecl]         = self.array_handler
         funcs[pycparser.c_ast.PtrDecl]           = self.ptr_handler
         funcs[pycparser.c_ast.Typedef]           = self.typedef_handler
@@ -62,19 +66,38 @@ class Parser(object):
     def get_type(self, val):
         return self.basics[val] if val in self.basics else self.names_to_pycstructs[val]
 
+    def set_type(self, name, val):
+        self.names_to_pycstructs[name] = val
+        self.names_to_pycstructs[(name, )] = val
+        return val
+
     def typedef_handler(self, node):
         assert type(node) is pycparser.c_ast.Typedef
         name = node.name
         val = self.parse_node(node.type)
-        self.names_to_pycstructs[name] = val
-        self.names_to_pycstructs[(name, )] = val
-        return self.names_to_pycstructs[name]
+        return self.set_type(name, val)
 
     def _field_handler(self, node):
         assert type(node) is pycparser.c_ast.Decl
         name = node.name
         typ = self.parse_node(node.type)
         return name, typ
+
+    def enum_handler(self, node):
+        assert type(node) == pycparser.c_ast.Enum
+
+        values = self.parse_node(node.values)
+        val = MetaPyEnum(node.name, (), dict(_values=values), self.conf)
+
+        return self.set_type(node.name, val)
+
+    def enumerator_handler(self, node):
+        assert type(node) == pycparser.c_ast.Enumerator
+        return self.parse_node(node.value), node.name
+
+    def enumerator_list_handler(self, node):
+        assert type(node) == pycparser.c_ast.EnumeratorList
+        return map(self.parse_node, node.enumerators)
 
     def struct_handler(self, node):
         assert type(node) == pycparser.c_ast.Struct
@@ -104,8 +127,7 @@ class Parser(object):
         else:
             val = MetaPyStruct(name, (), {"_fields" : fields})
             val.__module__ = None
-            self.names_to_pycstructs[name] = val
-            self.names_to_pycstructs[(name, )] = val
+            self.set_type(name, val)
 
         return val
 
@@ -136,8 +158,7 @@ class Parser(object):
         else:
             val = MetaPyUnion(name, (), {"_fields" : fields})
             val.__module__ = None
-            self.names_to_pycstructs[name] = val
-            self.names_to_pycstructs[(name, )] = val
+            self.set_type(name, val)
         
         return val
 
@@ -203,6 +224,9 @@ class Parser(object):
         if node.op == "~":
             return ~self.parse_node(node.expr)
 
+        if node.op == "-":
+            return -self.parse_node(node.expr)
+
         assert False, "Unknown unary op: %s" % node.op
 
     def parse_node(self, node):
@@ -212,7 +236,7 @@ class Parser(object):
         if type(node) in self.funcs:
             return self.funcs[type(node)](node)
 
-        
+        node.show()
         assert 0, "Unknown handler for type: %s" % repr(type(node))
 
     def parse_string(self, data, file_name="<unknown>", include_dirs=[get_dir(__file__)], debuglevel=None):

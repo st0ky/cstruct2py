@@ -24,21 +24,24 @@ class MetaPyEnum(MetaPyBasic):
         
     def __new__(cls, cls_name, bases, d, conf):
         assert "_values" in d
-        _values = OrderedDict(d["_values"])
-        assert all(map(lambda x: x is None or isinstance(x, int) or isinstance(x, long), _values.keys()))
+        _values = d["_values"]
+        if isinstance(_values, OrderedDict):
+            _values = _values.items()
+        assert all(map(lambda x: x is None or isinstance(x, int) or isinstance(x, long), [k for k, v in _values]))
 
-        val = _values.items()[0][0]
+        val = _values[0][0]
         if val is None:
             val = 0
         new_keys = []
-        for v, k in _values.items():
+        for v, k in _values:
             if v is None:
-                new_keys.append(val)
                 val += 1
+                new_keys.append(val)
             else:
                 val = v
                 new_keys.append(val)
-        _values = OrderedDict(zip(new_keys, _values.values()))
+
+        _values = OrderedDict(zip(new_keys, [v for k, v in _values]))
 
         min_val = min(_values.keys())
         max_val = max(_values.keys())
