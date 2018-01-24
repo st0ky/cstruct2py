@@ -70,6 +70,10 @@ class BasePyBasic(PyBase):
     def _val_property(self, val):
         if isinstance(val, int) or isinstance(val, long):
             if hasattr(self, "_max"):
+                mask = abs(self._max) | abs(self._min)
+                val &= mask
+                if val > self._max:
+                    val = -(-val % (mask + 1))
                 assert self._min <= val <= self._max, "value must be between 0x%X to 0x%X" % (self._min, self._max)
             self._cache = val
             return
