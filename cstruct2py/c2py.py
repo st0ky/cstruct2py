@@ -27,6 +27,7 @@ class Parser(object):
         self.structs_num = 0
         self.unions_num = 0
         self.arrays_num = 0
+        self.enums_num = 0
         self.cdata = ""
         self.last_processed = ""
 
@@ -92,13 +93,18 @@ class Parser(object):
     def enum_handler(self, node):
         assert type(node) == pycparser.c_ast.Enum
 
+        name = node.name
+        self.enums_num += 1
+        if name == None:
+            name = "enum_num_%d" % self.enums_num
+
         values = self.parse_node(node.values)
-        val = MetaPyEnum(node.name, (), dict(_values=values), self.conf)
+        val = MetaPyEnum(name, (), dict(_values=values), self.conf)
 
         for item in val:
             self.set_type(str(item), item)
 
-        return self.set_type(node.name, val)
+        return self.set_type(name, val)
 
     def enumerator_handler(self, node):
         assert type(node) == pycparser.c_ast.Enumerator
