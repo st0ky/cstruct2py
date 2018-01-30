@@ -28,6 +28,7 @@ class Parser(object):
         self.unions_num = 0
         self.arrays_num = 0
         self.cdata = ""
+        self.last_processed = ""
 
 
         funcs = {}
@@ -58,6 +59,9 @@ class Parser(object):
         self.pre.line_directive = None
 
         self.cparse = CParser()
+
+        self.cdata = ""
+        self.last_processed = ""
 
 
     def has_type(self, val):
@@ -255,6 +259,8 @@ class Parser(object):
         self.pre.write(buff)
         processed = buff.getvalue()
 
+        self.last_processed = processed
+
         not_found = [line for line in processed.splitlines() if "#include" in line]
         if not_found:
             print "There is unresolved includes:"
@@ -268,6 +274,8 @@ class Parser(object):
                 self.set_type(macro_name, self.pre.evalexpr(macro.value, get_strings=True))
 
         contents = self.cparse.parse(processed, file_name)
+
+        self.cdata += processed
 
         res = []
         for ex in contents.ext:
