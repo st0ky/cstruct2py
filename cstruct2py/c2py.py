@@ -51,6 +51,7 @@ class Parser(object):
         funcs[pycparser.c_ast.Constant]          = self.constant_handler
         funcs[pycparser.c_ast.BinaryOp]          = self.binary_op_handler
         funcs[pycparser.c_ast.UnaryOp]           = self.unary_op_handler
+        funcs[pycparser.c_ast.Cast]              = self.cast_handler
         self.funcs = funcs
 
         self.flush()
@@ -225,6 +226,14 @@ class Parser(object):
     def func_def_handler(self, node):
         assert type(node) is pycparser.c_ast.FuncDef
         return
+
+    def cast_handler(self, node):
+        assert type(node) is pycparser.c_ast.Cast
+        val = self.parse_node(node.expr)
+        obj = self.parse_node(node.to_type)()
+        obj._val_property = val
+        return obj._val_property
+
 
     def binary_op_handler(self, node):
         assert type(node) is pycparser.c_ast.BinaryOp
