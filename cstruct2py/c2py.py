@@ -151,7 +151,7 @@ class Parser(object):
         if name == None:
             name = "struct_num_%d" % self.structs_num
 
-        if self.has_type((name, )):
+        if self.has_type((name, )) and isinstance(type(self.get_type((name, ))), MetaPyStruct):
             val = self.get_type((name, ))
             MetaPyStruct.assign_fields(val, fields)
         else:
@@ -182,7 +182,7 @@ class Parser(object):
         if name == None:
             name = "union_num_%d" % self.unions_num
 
-        if self.has_type((name, )):
+        if self.has_type((name, )) and isinstance(type(self.get_type((name, ))), MetaPyUnion):
             val = self.get_type((name, ))
             MetaPyUnion.assign_fields(val, fields)
         else:
