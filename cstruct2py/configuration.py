@@ -49,22 +49,26 @@ class Config(object):
 
         names_to_pycstructs[frozenset(('float', ))] = names_to_pycstructs['float32_t']
         names_to_pycstructs[frozenset(('double', ))] = names_to_pycstructs['float64_t']
+        names_to_pycstructs[frozenset(('long', 'double', ))] = names_to_pycstructs['float64_t'] ## FIXME: we dont support realy long double
         # names_to_pycstructs[frozenset(('long', 'double', ))] = float64_t
 
-        names_to_pycstructs[frozenset(('long', 'long', ))] = names_to_pycstructs['int64_t']
-        names_to_pycstructs[frozenset(('long', ))] = long_val
-        names_to_pycstructs[frozenset(('int', ))] = names_to_pycstructs['int32_t']
-        names_to_pycstructs[frozenset(('short', ))] = names_to_pycstructs['int16_t']
-        names_to_pycstructs[frozenset(('byte', ))] = names_to_pycstructs['int8_t']
-        names_to_pycstructs[frozenset(('char', ))] = names_to_pycstructs['char_t']
+        names_to_pycstructs[frozenset(('long', 'long', ))]             = names_to_pycstructs['int64_t']
+        names_to_pycstructs[frozenset(('long', ))]                     = long_val
+        names_to_pycstructs[frozenset(('int', ))]                      = names_to_pycstructs['int32_t']
+        names_to_pycstructs[frozenset(('signed', ))]                   = names_to_pycstructs['int32_t']
+        names_to_pycstructs[frozenset(('short', ))]                    = names_to_pycstructs['int16_t']
+        names_to_pycstructs[frozenset(('byte', ))]                     = names_to_pycstructs['int8_t']
+        names_to_pycstructs[frozenset(('char', ))]                     = names_to_pycstructs['char_t']
         names_to_pycstructs[frozenset(('unsigned', 'long', 'long', ))] = names_to_pycstructs['uint64_t']
-        names_to_pycstructs[frozenset(('unsigned', 'long', ))] = ulong_val
-        names_to_pycstructs[frozenset(('unsigned', 'int', ))] = names_to_pycstructs['uint32_t']
-        names_to_pycstructs[frozenset(('unsigned', 'short', ))] = names_to_pycstructs['uint16_t']
-        names_to_pycstructs[frozenset(('unsigned', 'byte', ))] = names_to_pycstructs['uint8_t']
-        names_to_pycstructs[frozenset(('unsigned', 'char', ))] = names_to_pycstructs['uchar_t']
+        names_to_pycstructs[frozenset(('unsigned', 'long', ))]         = ulong_val
+        names_to_pycstructs[frozenset(('unsigned', 'int', ))]          = names_to_pycstructs['uint32_t']
+        names_to_pycstructs[frozenset(('unsigned', ))]                 = names_to_pycstructs['uint32_t']
+        names_to_pycstructs[frozenset(('unsigned', 'short', ))]        = names_to_pycstructs['uint16_t']
+        names_to_pycstructs[frozenset(('unsigned', 'byte', ))]         = names_to_pycstructs['uint8_t']
+        names_to_pycstructs[frozenset(('unsigned', 'char', ))]         = names_to_pycstructs['uchar_t']
 
         names_to_pycstructs[frozenset(('void', '*', ))] = names_to_pycstructs['uint%d_t' % self.ptr_size]
+        names_to_pycstructs[frozenset(('void', ))] = None
         
         self.names_to_pycstructs = names_to_pycstructs
 
