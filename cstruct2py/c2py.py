@@ -61,10 +61,12 @@ class Parser(object):
 
 
     def has_type(self, val):
-        return val in self.basics or val in self.names_to_pycstructs
+        return self.conf.has_type(val) or val in self.names_to_pycstructs
 
     def get_type(self, val):
-        return self.basics[val] if val in self.basics else self.names_to_pycstructs[val]
+        if self.conf.has_type(val):
+            return self.conf.get_type(val)
+        return self.names_to_pycstructs[val]
 
     def set_type(self, name, val):
         self.names_to_pycstructs[name] = val

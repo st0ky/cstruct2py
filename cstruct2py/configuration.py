@@ -47,38 +47,42 @@ class Config(object):
         long_val = names_to_pycstructs['int%d_t' % self.long_size]
         ulong_val = names_to_pycstructs['uint%d_t' % self.long_size]
 
-        names_to_pycstructs[('float', )] = names_to_pycstructs['float32_t']
-        names_to_pycstructs[('double', )] = names_to_pycstructs['float64_t']
-        # names_to_pycstructs[('long', 'double', )] = float64_t
+        names_to_pycstructs[frozenset(('float', ))] = names_to_pycstructs['float32_t']
+        names_to_pycstructs[frozenset(('double', ))] = names_to_pycstructs['float64_t']
+        # names_to_pycstructs[frozenset(('long', 'double', ))] = float64_t
 
-        names_to_pycstructs[('long', 'long', )] = names_to_pycstructs['int64_t']
-        names_to_pycstructs[('long', 'int', )] = long_val
-        names_to_pycstructs[('long', )] = long_val
-        names_to_pycstructs[('int', )] = names_to_pycstructs['int32_t']
-        names_to_pycstructs[('short', )] = names_to_pycstructs['int16_t']
-        names_to_pycstructs[('byte', )] = names_to_pycstructs['int8_t']
-        names_to_pycstructs[('char', )] = names_to_pycstructs['char_t']
-        names_to_pycstructs[('signed', 'long', 'long', )] = names_to_pycstructs['int64_t']
-        names_to_pycstructs[('signed', 'long', 'int', )] = long_val
-        names_to_pycstructs[('long', 'signed', 'int', )] = long_val
-        names_to_pycstructs[('signed', 'long', )] = long_val
-        names_to_pycstructs[('signed', 'int', )] = names_to_pycstructs['int32_t']
-        names_to_pycstructs[('signed', 'short', )] = names_to_pycstructs['int16_t']
-        names_to_pycstructs[('signed', 'byte', )] = names_to_pycstructs['int8_t']
-        names_to_pycstructs[('signed', 'char', )] = names_to_pycstructs['char_t']
-        names_to_pycstructs[('unsigned', 'long', 'long', )] = names_to_pycstructs['uint64_t']
-        names_to_pycstructs[('unsigned', 'long', 'int', )] = ulong_val
-        names_to_pycstructs[('long', 'unsigned', 'int', )] = ulong_val
-        names_to_pycstructs[('unsigned', 'long', )] = ulong_val
-        names_to_pycstructs[('unsigned', 'int', )] = names_to_pycstructs['uint32_t']
-        names_to_pycstructs[('unsigned', 'short', )] = names_to_pycstructs['uint16_t']
-        names_to_pycstructs[('unsigned', 'byte', )] = names_to_pycstructs['uint8_t']
-        names_to_pycstructs[('unsigned', 'char', )] = names_to_pycstructs['uchar_t']
+        names_to_pycstructs[frozenset(('long', 'long', ))] = names_to_pycstructs['int64_t']
+        names_to_pycstructs[frozenset(('long', ))] = long_val
+        names_to_pycstructs[frozenset(('int', ))] = names_to_pycstructs['int32_t']
+        names_to_pycstructs[frozenset(('short', ))] = names_to_pycstructs['int16_t']
+        names_to_pycstructs[frozenset(('byte', ))] = names_to_pycstructs['int8_t']
+        names_to_pycstructs[frozenset(('char', ))] = names_to_pycstructs['char_t']
+        names_to_pycstructs[frozenset(('unsigned', 'long', 'long', ))] = names_to_pycstructs['uint64_t']
+        names_to_pycstructs[frozenset(('unsigned', 'long', ))] = ulong_val
+        names_to_pycstructs[frozenset(('unsigned', 'int', ))] = names_to_pycstructs['uint32_t']
+        names_to_pycstructs[frozenset(('unsigned', 'short', ))] = names_to_pycstructs['uint16_t']
+        names_to_pycstructs[frozenset(('unsigned', 'byte', ))] = names_to_pycstructs['uint8_t']
+        names_to_pycstructs[frozenset(('unsigned', 'char', ))] = names_to_pycstructs['uchar_t']
 
-        names_to_pycstructs[('void', '*', )] = names_to_pycstructs['uint%d_t' % self.ptr_size]
+        names_to_pycstructs[frozenset(('void', '*', ))] = names_to_pycstructs['uint%d_t' % self.ptr_size]
         
         self.names_to_pycstructs = names_to_pycstructs
-            
+
+    def simplify_type(self, val):
+        if type(val) in [str]:
+            val = (val, )
+        val = set(val)
+        if val & {"short", "byte", "char", "long"}:
+            val ^= val & {"int"}
+        if val & {"short", "byte", "char", "int", "long"}:
+            val ^= val & {"signed"}
+        return frozenset(val)
+
+    def has_type(self, val):
+        return self.simplify_type(val) in self.names_to_pycstructs
+
+    def get_type(self, val):
+        return self.names_to_pycstructs[self.simplify_type(val)]
 
     @property
     def basics(self):
