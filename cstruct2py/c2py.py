@@ -33,7 +33,7 @@ class Parser(object):
 
 
         funcs = {}
-        funcs[pycparser.c_ast.IdentifierType]    = self.type_handler
+        funcs[pycparser.c_ast.ID]                = self.id_handler
         funcs[pycparser.c_ast.IdentifierType]    = self.type_handler
         funcs[pycparser.c_ast.Struct]            = self.struct_handler
         funcs[pycparser.c_ast.Union]             = self.union_handler
@@ -67,7 +67,7 @@ class Parser(object):
 
 
     def has_type(self, val):
-        return self.conf.has_type(val) or val in self.names_to_pycstructs
+        return val in self.names_to_pycstructs or self.conf.has_type(val)
 
     def get_type(self, val):
         if self.conf.has_type(val):
@@ -78,6 +78,11 @@ class Parser(object):
         self.names_to_pycstructs[name] = val
         self.names_to_pycstructs[(name, )] = val
         return val
+
+    def id_handler(self, node):
+        assert type(node) is pycparser.c_ast.ID
+        return self.get_type(node.name)
+
 
     def typedef_handler(self, node):
         assert type(node) is pycparser.c_ast.Typedef
@@ -113,7 +118,16 @@ class Parser(object):
 
     def enumerator_list_handler(self, node):
         assert type(node) == pycparser.c_ast.EnumeratorList
-        return map(self.parse_node, node.enumerators)
+        res = []
+        last = -1
+        for item in node.enumerators:
+            val, name = self.parse_node(item)
+            if val is None:
+                val = last + 1
+            last = val
+            self.set_type(name, val)
+            res.append((val, name))
+        return res
 
     def struct_handler(self, node):
         assert type(node) == pycparser.c_ast.Struct
