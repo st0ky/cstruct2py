@@ -65,6 +65,10 @@ class Parser(object):
         self.cdata = ""
         self.last_processed = ""
 
+    def __getattr__(self, name):
+        if name in self.__dict__ or not self.has_type(name):
+            return self.__getattribute__(name)
+        return self.get_type(name)
 
     def has_type(self, val):
         return val in self.names_to_pycstructs or self.conf.has_type(val)

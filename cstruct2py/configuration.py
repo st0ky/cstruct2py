@@ -42,7 +42,7 @@ class Config(object):
                     _val_wrapper=_CharRapper))
 
         for k, v in names_to_pycstructs.items():
-            names_to_pycstructs[(k,)] = v
+            names_to_pycstructs[frozenset((k,))] = v
 
         long_val = names_to_pycstructs['int%d_t' % self.long_size]
         ulong_val = names_to_pycstructs['uint%d_t' % self.long_size]
@@ -52,14 +52,14 @@ class Config(object):
         names_to_pycstructs[frozenset(('long', 'double', ))] = names_to_pycstructs['float64_t'] ## FIXME: we dont support realy long double
         # names_to_pycstructs[frozenset(('long', 'double', ))] = float64_t
 
-        names_to_pycstructs[frozenset(('long', 'long', ))]             = names_to_pycstructs['int64_t']
+        names_to_pycstructs[frozenset(('long0', 'long1', ))]             = names_to_pycstructs['int64_t']
         names_to_pycstructs[frozenset(('long', ))]                     = long_val
         names_to_pycstructs[frozenset(('int', ))]                      = names_to_pycstructs['int32_t']
         names_to_pycstructs[frozenset(('signed', ))]                   = names_to_pycstructs['int32_t']
         names_to_pycstructs[frozenset(('short', ))]                    = names_to_pycstructs['int16_t']
         names_to_pycstructs[frozenset(('byte', ))]                     = names_to_pycstructs['int8_t']
         names_to_pycstructs[frozenset(('char', ))]                     = names_to_pycstructs['char_t']
-        names_to_pycstructs[frozenset(('unsigned', 'long', 'long', ))] = names_to_pycstructs['uint64_t']
+        names_to_pycstructs[frozenset(('unsigned', 'long0', 'long1', ))] = names_to_pycstructs['uint64_t']
         names_to_pycstructs[frozenset(('unsigned', 'long', ))]         = ulong_val
         names_to_pycstructs[frozenset(('unsigned', 'int', ))]          = names_to_pycstructs['uint32_t']
         names_to_pycstructs[frozenset(('unsigned', ))]                 = names_to_pycstructs['uint32_t']
@@ -74,12 +74,22 @@ class Config(object):
 
     def simplify_type(self, val):
         if type(val) in [str]:
-            val = (val, )
+            val = [val, ]
+        else:
+            val = list(val)
+
+        if val.count('long') > 1:
+            m = 0
+            while "long" in val:
+                val[val.index("long")] = "long%d" % m
+                m += 1
+
         val = set(val)
         if val & {"short", "byte", "char", "long"}:
             val ^= val & {"int"}
         if val & {"short", "byte", "char", "int", "long"}:
             val ^= val & {"signed"}
+
         return frozenset(val)
 
     def has_type(self, val):
@@ -94,7 +104,7 @@ class Config(object):
 
     def __getattr__(self, name):
         if name in ["names_to_pycstructs", "basics"] or name not in self.basics:
-            return __getattribute__(self, name)
+            return self.__getattribute__(name)
 
         return self.basics[name]
 
