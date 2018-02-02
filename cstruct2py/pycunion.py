@@ -1,6 +1,8 @@
 from pycbase import *
 from pycstruct import *
 from basics import *
+from configuration import gcc_x86_64_le
+
 
 class BasePyUnion(PyBase):
     def __init__(self, buf=None, index=0, **kwargs):
@@ -109,12 +111,12 @@ class BasePyUnion(PyBase):
     
 
 class MetaPyUnion(type):
-    def __init__(cls, cls_name, bases, d):
+    def __init__(cls, cls_name, bases, d, conf=gcc_x86_64_le):
         super(MetaPyUnion, cls).__init__(cls_name, (BasePyUnion,), d)
         if not hasattr(cls, "incomplete type"):
             cls.assign_fields(cls._fields)
 
-    def __new__(cls, cls_name, bases, d):
+    def __new__(cls, cls_name, bases, d, conf=gcc_x86_64_le):
         assert "_fields" in d
         if d["_fields"] is None:
             d["incomplete type"] = True
@@ -164,6 +166,10 @@ class MetaPyUnion(type):
 
     def __len__(cls):
         return cls.size
+
+
+def Union(fields, name="<unknown_union>", conf=gcc_x86_64_le):
+    return MetaPyUnion(name, (), dict(_fields=fields), conf)
 
 # class A(object):
 #     __metaclass__ = MetaPyStruct

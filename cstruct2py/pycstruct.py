@@ -1,17 +1,17 @@
-import struct
 from functools import partial
 from basics import *
 from pycbase import *
+from configuration import gcc_x86_64_le
 
 pad = lambda x, y: x + ((-x) % y)
 
 class MetaPyStruct(type):
-    def __init__(cls, cls_name, bases, d):
+    def __init__(cls, cls_name, bases, d, conf=gcc_x86_64_le):
         super(MetaPyStruct, cls).__init__(cls_name, (BasePyStruct,), d)
         if not hasattr(cls, "incomplete type"):
             cls.assign_fields(cls._fields)
 
-    def __new__(cls, cls_name, bases, d):
+    def __new__(cls, cls_name, bases, d, conf=gcc_x86_64_le):
         assert "_fields" in d
         if d["_fields"] is None:
             d["incomplete type"] = True
@@ -156,6 +156,8 @@ class BasePyStruct(PyBase):
             res = ", ".join([data, res])
         return res
 
+def Struct(fields, name="<unknown_struct>", conf=gcc_x86_64_le):
+    return MetaPyStruct(name, (), dict(_fields=fields), conf)
 
 
 

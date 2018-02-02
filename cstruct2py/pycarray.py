@@ -1,6 +1,7 @@
 from pycbase import *
 from pycstruct import *
 from basics import *
+from configuration import gcc_x86_64_le
 
 class BasePyArray(PyBase):
     def __init__(self, buf=None, index=0, *args, **kwargs):
@@ -171,7 +172,7 @@ class BasePyArray(PyBase):
 
 
 class MetaPyArray(type):
-    def __init__(cls, cls_name, bases, d):
+    def __init__(cls, cls_name, bases, d, conf=gcc_x86_64_le):
         assert "_type" in d
         assert "_count" in d
         assert (d["_count"] is None or (type(d["_count"]) in [int, long] and d["_count"] >= 0))
@@ -184,11 +185,15 @@ class MetaPyArray(type):
         else:
             cls.size = 0
 
-    def __new__(cls, cls_name, bases, d):
+    def __new__(cls, cls_name, bases, d, conf=gcc_x86_64_le):
         return type.__new__(cls, cls_name, (BasePyArray,), d)
 
     def __len__(cls):
         return cls.size
+
+def Array(typ, count=None, name="<unknown_array>", conf=gcc_x86_64_le):
+    return MetaPyArray(name, (), dict(_type=typ, _count=count), conf)
+
 
 
 # class iArr(object):

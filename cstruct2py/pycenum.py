@@ -1,6 +1,7 @@
 from .pycbase import PyBase
 from collections import OrderedDict
 from .basics import MetaPyBasic, BasePyBasic
+from configuration import gcc_x86_64_le
 
 
 
@@ -101,3 +102,6 @@ class BasePyEnum(object):
         val = self._val_wrapper(val)
         return BasePyBasic._val_property.fset(self, val)
     
+
+def Enum(values, name="<unknown_enum>", conf=gcc_x86_64_le):
+    return MetaPyEnum(name, (), dict(_values=values), conf)
