@@ -100,13 +100,18 @@ class Config(object):
 
     @property
     def basics(self):
-        return self.names_to_pycstructs
+        return dict([(iter(name).next(), val) for name, val in self.names_to_pycstructs.items() if len(name) == 1])
 
     def __getattr__(self, name):
-        if name in ["names_to_pycstructs", "basics"] or name not in self.basics:
+        if name in self.__dict__ or name not in self.basics:
             return self.__getattribute__(name)
 
-        return self.basics[name]
+        return self.get_type(name)
+
+    def update_globals(self, d):
+        vals = self.basics
+        map(vals.pop, ["long", "int", "float"])
+        d.update()
 
     def __setattr__(self, name, val):
         if hasattr(self, "names_to_pycstructs"):

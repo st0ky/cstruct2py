@@ -157,7 +157,7 @@ class Parser(object):
 
         if self.has_type((name, )) and isinstance(type(self.get_type((name, ))), MetaPyStruct):
             val = self.get_type((name, ))
-            MetaPyStruct.assign_fields(val, fields)
+            val.assign_fields(fields)
         else:
             val = MetaPyStruct(name, (), {"_fields" : fields})
             val.__module__ = None
@@ -188,7 +188,7 @@ class Parser(object):
 
         if self.has_type((name, )) and isinstance(type(self.get_type((name, ))), MetaPyUnion):
             val = self.get_type((name, ))
-            MetaPyUnion.assign_fields(val, fields)
+            val.assign_fields(fields)
         else:
             val = MetaPyUnion(name, (), {"_fields" : fields})
             val.__module__ = None
@@ -331,6 +331,9 @@ class Parser(object):
         """Enters the new classes to globals.
            You should call that functions like that: p.update_globals(globals())
         """
+        self.conf.update_globals(g)
         g.update(self.names_to_pycstructs)
+
+
 
 
