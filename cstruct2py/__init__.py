@@ -6,5 +6,5 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "pcpp")
 import pycparser
 import pcpp
 
-__all__ = ["pycbase", "pycarray", "pycstruct", "pycunion", "c2py", "basics", "configuration", "pycenum"]
+__all__ = ["pycbase", "pycarray", "pycstruct", "pycunion", "c2py", "basics", "configuration", "pycenum", "utils"]
 from . import *
