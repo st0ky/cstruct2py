@@ -191,6 +191,20 @@ class MetaPyArray(type):
     def __len__(cls):
         return cls.size
 
+    def show(cls):
+        field_repr = cls._type.show().splitlines()
+        type_data = "\n\t".join(field_repr)
+        
+        count_data = "" if cls._count is None else ", %s" % hex(cls._count)
+
+        if cls.__name__ == "<unknown_array>":
+            resp = "Array(%s%s)" % (type_data, count_data)
+        else:
+            resp = "Array(name=%s, typ=%s%s)" % (repr(cls.__name__), type_data,
+                "" if cls._count is None else ", count=%s" % count_data)
+
+        return resp
+
 def Array(typ, count=None, name="<unknown_array>", conf=gcc_x86_64_le):
     return MetaPyArray(name, (), dict(_type=typ, _count=count), conf)
 

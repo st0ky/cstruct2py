@@ -64,6 +64,19 @@ class MetaPyStruct(type):
     def __len__(cls):
         return cls.size
 
+    def show(cls):
+        resp = "Struct(name=%s, fields=[\n" % repr(cls.__name__)
+        for field in cls._fields:
+            field_repr = getattr(cls, field).fget.keywords["cls"].show().splitlines()
+            resp += "\t(%s, %s" % (repr(field), field_repr[0])
+            for line in field_repr[1:]:
+                resp += "\n\t"
+                resp += line
+            resp += "),\n"
+        resp += "\t])"
+
+        return resp
+
 class BasePyStruct(PyBase):
     def __init__(self, buf=None, index=0, **kwargs):
         super(BasePyStruct, self).__init__(buf, index)

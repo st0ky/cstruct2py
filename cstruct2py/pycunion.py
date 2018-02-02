@@ -168,6 +168,24 @@ class MetaPyUnion(type):
         return cls.size
 
 
+    def show(cls):
+        if cls.__name__ == "<unknown_union>":
+            resp = "Union([\n" % repr(cls.__name__)
+        else:
+            resp = "Union(name=%s, fields=[\n" % repr(cls.__name__)
+            
+        for field in cls._fields:
+            field_repr = getattr(cls, field).fget.keywords["cls"].show().splitlines()
+            resp += "\t(%s, %s" % (repr(field), field_repr[0])
+            for line in field_repr[1:]:
+                resp += "\n\t"
+                resp += line
+            resp += "),\n"
+        resp += "\t])"
+
+        return resp
+
+
 def Union(fields, name="<unknown_union>", conf=gcc_x86_64_le):
     return MetaPyUnion(name, (), dict(_fields=fields), conf)
 

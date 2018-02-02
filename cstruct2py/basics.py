@@ -17,6 +17,10 @@ class MetaPyBasic(type):
     def __len__(cls):
         return cls.size
 
+    def show(cls):
+        return cls.__name__
+
+
 class _IntRapper(int):
     def __repr__(self):
         return hex(self)
