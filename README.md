@@ -1,6 +1,19 @@
 # cstruct2py
 
-Pure python library for generate python classes from code C and use them to pack and unpack data
+Pure python library for generate python classes from code C and use them to pack and unpack data.
+The library can parse C headres (structs, unions, enums, and arrays declarations) and emulate them in python. The generated pythonic classes can parse and pack the data.
+
+For example:
+```
+typedef struct {
+  int x;
+  int y;
+} Point;
+
+after generating pythonic class...
+p = Point(x=0x1234, y=0x5678)
+p.packed == "\x34\x12\x00\x00\x78\x56\x00\x00"
+```
 
 ## Credits
 The library uses [pcpp](https://github.com/ned14/pcpp) to preprocess the C code and [pycparser](https://github.com/eliben/pycparser) to make ast from the C code.
