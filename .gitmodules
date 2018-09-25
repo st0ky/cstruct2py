@@ -1,6 +1,6 @@
 [submodule "pycparser"]
 	path = cstruct2py/pycparser
-	url = https://github.com/eliben/pycparser.git
+	url = git@github.com:eliben/pycparser.git
 [submodule "pcpp"]
 	path = cstruct2py/pcpp
-	url = https://github.com/st0ky/pcpp.git
+	url = git@github.com:st0ky/pcpp.git
