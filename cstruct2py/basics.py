@@ -21,7 +21,7 @@ class MetaPyBasic(type):
         return cls.__name__
 
 
-class _IntRapper(int):
+class _IntRapper(long):
     def __repr__(self):
         return hex(self)
 
