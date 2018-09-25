@@ -61,6 +61,17 @@ class Parser(object):
         self.pre.line_directive = None
 
         self.cparse = CParser()
+        # self.cparse.parse(
+        #     """
+        #     typedef int uint8_t;
+        #     typedef int uint16_t;
+        #     typedef int uint32_t;
+        #     typedef int uint64_t;
+        #     typedef int int8_t;
+        #     typedef int int16_t;
+        #     typedef int int32_t;
+        #     typedef int int64_t;
+        #     """, "", 7)
 
         self.cdata = ""
         self.last_processed = ""
@@ -92,6 +103,16 @@ class Parser(object):
         assert type(node) is pycparser.c_ast.Typedef
         name = node.name
         val = self.parse_node(node.type)
+        if name in [
+            "uint8_t",
+            "uint16_t",
+            "uint32_t",
+            "uint64_t",
+            "int8_t",
+            "int16_t",
+            "int32_t",
+            "int64_t",]:
+            return self.get_type(name)
         return self.set_type(name, val)
 
     def _field_handler(self, node):
@@ -306,7 +327,17 @@ class Parser(object):
             if not macro.arglist:
                 self.set_type(macro_name, self.pre.evalexpr(macro.value, get_strings=True))
 
-        contents = self.cparse.parse(processed, file_name)
+        types = """
+            typedef int uint8_t;
+            typedef int uint16_t;
+            typedef int uint32_t;
+            typedef int uint64_t;
+            typedef int int8_t;
+            typedef int int16_t;
+            typedef int int32_t;
+            typedef int int64_t;
+            """
+        contents = self.cparse.parse(types+processed, file_name)
 
         self.cdata += processed
 
@@ -315,6 +346,7 @@ class Parser(object):
             if debuglevel:
                 ex.show()
             res.append(self.parse_node(ex))
+        res = res[8:]
 
         return res[0] if len(res) == 1 else res
 
