@@ -17,7 +17,7 @@ class _EnumWrapper(int):
         return hex(self)
 
     def __str__(self):
-        return repr(self)
+        return self._values[self]
 
 class MetaPyEnum(MetaPyBasic):
     def __init__(cls, cls_name, bases, d, conf):
@@ -66,7 +66,7 @@ class MetaPyEnum(MetaPyBasic):
         return cls.size
 
     def __iter__(cls):
-        return iter(map(cls, cls._values.keys()))
+        return iter(map(lambda x: cls(x)._val_property, cls._values.keys()))
 
     def __contains__(cls, val):
         if isinstance(val, PyBase):
