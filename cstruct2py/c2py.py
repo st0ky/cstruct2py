@@ -178,9 +178,9 @@ class Parser(object):
 
         if self.has_type((name, )) and isinstance(type(self.get_type((name, ))), MetaPyStruct):
             val = self.get_type((name, ))
-            val.assign_fields(fields)
+            val.assign_fields(fields, self.conf)
         else:
-            val = MetaPyStruct(name, (), {"_fields" : fields})
+            val = MetaPyStruct(name, (), {"_fields" : fields}, self.conf)
             val.__module__ = None
             self.set_type(name, val)
 
@@ -209,9 +209,9 @@ class Parser(object):
 
         if self.has_type((name, )) and isinstance(type(self.get_type((name, ))), MetaPyUnion):
             val = self.get_type((name, ))
-            val.assign_fields(fields)
+            val.assign_fields(fields, self.conf)
         else:
-            val = MetaPyUnion(name, (), {"_fields" : fields})
+            val = MetaPyUnion(name, (), {"_fields" : fields}, self.conf)
             val.__module__ = None
             self.set_type(name, val)
         
@@ -223,7 +223,7 @@ class Parser(object):
         num = self.parse_node(node.dim)
         assert num is None or type(num) in [long, int]
         self.arrays_num += 1
-        val = MetaPyArray("array_num_%d" % self.arrays_num, (), {"_type" : typ, "_count" : num})
+        val = MetaPyArray("array_num_%d" % self.arrays_num, (), {"_type" : typ, "_count" : num}, self.conf)
         val.__module__ = None
         return val
 

@@ -9,7 +9,7 @@ class MetaPyStruct(type):
     def __init__(cls, cls_name, bases, d, conf=gcc_x86_64_le):
         super(MetaPyStruct, cls).__init__(cls_name, (BasePyStruct,), d)
         if not hasattr(cls, "incomplete type"):
-            cls.assign_fields(cls._fields)
+            cls.assign_fields(cls._fields, conf.alignment)
 
     def __new__(cls, cls_name, bases, d, conf=gcc_x86_64_le):
         assert "_fields" in d
@@ -18,21 +18,22 @@ class MetaPyStruct(type):
 
         return type.__new__(cls, cls_name, (BasePyStruct,), d)
 
-    def assign_fields(cls, fields):
+    def assign_fields(cls, fields, alignment=None):
         assert type(fields) in [list, tuple, dict]
         if type(fields) is dict:
             fields = fields.items()
 
         off = 0
-        _alignment = 1
+        _alignment = 1 if alignment is None else alignment
         unnamed_count = 0
         names = []
         for (name, field_cls) in fields:
             assert issubclass(field_cls, PyBase), field_cls
             
-            _alignment = max(field_cls._alignment, _alignment)
+            if alignment is None:
+                _alignment = max(field_cls._alignment, _alignment)
 
-            off = pad(off, field_cls._alignment)
+            off = pad(off, field_cls._alignment if alignment is None else alignment)
             
             if name is None:
                 unnamed = "unnamed %d" % unnamed_count

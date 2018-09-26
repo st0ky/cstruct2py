@@ -2,7 +2,7 @@ from .basics import MetaPyBasic, _CharRapper
 
 
 class Config(object):
-    def __init__(self, byteorder, long_size, ptr_size):
+    def __init__(self, byteorder, long_size, ptr_size, alignment=None):
         super(Config, self).__init__()
 
         big = ["big", "be", ">"]
@@ -15,6 +15,7 @@ class Config(object):
         self.byteorder = "<" if byteorder in little else ">"
         self.long_size = long_size
         self.ptr_size = ptr_size
+        self.alignment = alignment
 
         self.generate_types()
         
