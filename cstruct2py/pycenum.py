@@ -33,7 +33,7 @@ class MetaPyEnum(MetaPyBasic):
         _values = d["_values"]
         if isinstance(_values, OrderedDict):
             _values = _values.items()
-        assert all(map(lambda x: x is None or isinstance(x, int) or isinstance(x, long), [k for k, v in _values]))
+        assert all(map(lambda x: x is None or isinstance(x, (int, long)), [k for k, v in _values]))
 
         val = _values[0][0]
         if val is None:

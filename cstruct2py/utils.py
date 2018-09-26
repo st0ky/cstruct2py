@@ -6,7 +6,7 @@ def strcpy(src, limit=None):
 	if isinstance(src, BasePyArray):
 		src = src.packed
 
-	if any(map(lambda x: isinstance(src, x), [str, bytearray])):
+	if isinstance(src, (str, bytearray)):
 		indx = src.find("\x00")
 		end = indx + 1 if indx != -1 else len(src)
 		if limit != None:

@@ -38,7 +38,7 @@ class _CharRapper(int):
 class BasePyBasic(PyBase):
     def __init__(self, buf=None, index=0):
 
-        if isinstance(buf, int) or isinstance(buf, long):
+        if isinstance(buf, (int, long)):
             super(BasePyBasic, self).__init__(None, 0)
             self._cache = buf
             return
@@ -72,7 +72,7 @@ class BasePyBasic(PyBase):
 
     @_val_property.setter
     def _val_property(self, val):
-        if isinstance(val, int) or isinstance(val, long):
+        if isinstance(val, (int, long)):
             if hasattr(self, "_max"):
                 mask = abs(self._max) | abs(self._min)
                 val &= mask
