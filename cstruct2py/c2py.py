@@ -364,7 +364,7 @@ class Parser(object):
            You should call that functions like that: p.update_globals(globals())
         """
         self.conf.update_globals(g)
-        g.update(self.names_to_pycstructs)
+        g.update([(k,v) for k,v in self.names_to_pycstructs.items() if isinstance(k, str)])
 
 
 

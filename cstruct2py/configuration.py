@@ -109,9 +109,9 @@ class Config(object):
         return self.get_type(name)
 
     def update_globals(self, d):
-        vals = self.basics
+        vals = dict([(k,v) for k,v in self.basics.items() if isinstance(k, str)])
         map(vals.pop, ["long", "int", "float"])
-        d.update()
+        d.update(vals)
 
     def __setattr__(self, name, val):
         if hasattr(self, "names_to_pycstructs"):
