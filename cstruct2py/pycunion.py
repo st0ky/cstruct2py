@@ -157,7 +157,7 @@ class MetaPyUnion(type):
                     ))
             size = max(size, len(field_cls))
 
-        cls.size = size
+        setattr(cls, " size", size)
         cls._alignment = _alignment
         cls._fields = names
 
@@ -166,7 +166,7 @@ class MetaPyUnion(type):
 
 
     def __len__(cls):
-        return cls.size
+        return getattr(cls, " size")
 
 
     def show(cls):

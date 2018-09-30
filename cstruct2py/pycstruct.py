@@ -55,7 +55,7 @@ class MetaPyStruct(type):
             
             off += len(field_cls)
 
-        cls.size = pad(off, _alignment)
+        setattr(cls, " size", pad(off, _alignment))
         cls._alignment = _alignment
         cls._fields = names
 
@@ -63,7 +63,7 @@ class MetaPyStruct(type):
             delattr(cls, "incomplete type")
 
     def __len__(cls):
-        return cls.size
+        return getattr(cls, " size")
 
     def show(cls):
         resp = "Struct(name=%s, fields=[\n" % repr(cls.__name__)

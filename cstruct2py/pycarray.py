@@ -180,10 +180,7 @@ class MetaPyArray(type):
         super(MetaPyArray, cls).__init__(cls_name, (BasePyArray,), d)
 
         cls._alignment = cls._type._alignment
-        if cls._count:
-            cls.size = len(cls._type) * cls._count
-        else:
-            cls.size = 0
+        cls.size = len(cls._type) * cls._count if cls._count else 0
 
     def __new__(cls, cls_name, bases, d, conf=gcc_x86_64_le):
         return type.__new__(cls, cls_name, (BasePyArray,), d)
