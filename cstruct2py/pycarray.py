@@ -150,7 +150,7 @@ class BasePyArray(PyBase):
         if self._buf:
             buf[index:index + len(self)] = self._buf[self._index:self._index + len(self)]
         for i, item in self._cache.items():
-            item.pack_into(buf, item._index - self._index)
+            item.pack_into(buf, index + item._index - self._index)
 
         return buf
 

@@ -150,7 +150,7 @@ class BasePyStruct(PyBase):
         if self._buf:
             buf[index:index + len(self)] = self._buf[self._index:self._index + len(self)]
         for field in self._cache.values():
-            field.pack_into(buf, field._index - self._index)
+            field.pack_into(buf, index + field._index - self._index)
 
         return buf
 
