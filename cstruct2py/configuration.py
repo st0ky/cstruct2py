@@ -86,9 +86,9 @@ class Config(object):
                 m += 1
 
         val = set(val)
-        if val & {"short", "byte", "char", "long"}:
+        if val & {"short", "byte", "char", "long", "long0"}:
             val ^= val & {"int"}
-        if val & {"short", "byte", "char", "int", "long"}:
+        if val & {"short", "byte", "char", "int", "long", "long0"}:
             val ^= val & {"signed"}
 
         return frozenset(val)

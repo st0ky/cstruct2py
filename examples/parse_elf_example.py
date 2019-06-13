@@ -8,7 +8,7 @@ sizeof = len
 def main(file_path):
 
     parser = cstruct2py.c2py.Parser()
-    parser.parse_file("cstruct2py/example.h")
+    parser.parse_file("examples/example.h")
     parser.update_globals(globals())
 
     data = open(file_path, "rb").read()
