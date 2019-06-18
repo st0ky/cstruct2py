@@ -97,6 +97,9 @@ class BasePyUnion(PyBase):
 
     def parse_all(self):
         pass
+    
+    def __eq__(self, other):
+        return isinstance(other, type(self)) and all(getattr(self, field) == getattr(other, field) for field in self._fields)
 
     def __str__(self):
         res = ", ".join("%s:%s" % (repr(field), getattr(self, field)) for field in self._fields)

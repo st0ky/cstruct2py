@@ -92,6 +92,9 @@ class BasePyBasic(PyBase):
 
         raise ValueError(val)
 
+    def __eq__(self, other):
+        return isinstance(other, type(self)) and self._val_property == other._val_property
+
     def __str__(self):
         return str(self._val_property)
 

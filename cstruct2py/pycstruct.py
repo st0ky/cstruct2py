@@ -159,6 +159,9 @@ class BasePyStruct(PyBase):
             getattr(self, field)
         return self
 
+    def __eq__(self, other):
+        return isinstance(other, type(self)) and all(getattr(self, field) == getattr(other, field) for field in self._fields)
+
     def __str__(self):
         res = ", ".join("%s:%s" % (repr(field), getattr(self, field)) for field in self._fields)
         return "{%s}" % res

@@ -159,6 +159,9 @@ class BasePyArray(PyBase):
             for i in self:
                 pass
 
+    def __eq__(self, other):
+        return isinstance(other, type(self)) and all(x == y for x, y in zip(self, other))
+
     def __str__(self):
         res = ", ".join(map(str, self))
         return "[%s]" % res

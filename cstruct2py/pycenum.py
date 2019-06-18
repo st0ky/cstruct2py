@@ -80,6 +80,9 @@ class BasePyEnum(object):
         if val is not None:
             self._val_property = val
     
+    def __eq__(self, other):
+        return isinstance(other, type(self)) and self._val_property == other._val_property
+
     def __str__(self):
         if self in type(self):
             return self._values[self._val_property]
